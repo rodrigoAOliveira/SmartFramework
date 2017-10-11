@@ -3,13 +3,14 @@ package com.arcthos.smartframework.smartorm;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
+import java.io.Serializable;
 import java.util.UUID;
 
 /**
  * Created by Vinicius Damiati on 05-Oct-17.
  */
 
-public abstract class SmartObject {
+public abstract class SmartObject implements Serializable {
     @SerializedName("Id")
     protected String id;
 
