@@ -1,5 +1,9 @@
 package com.arcthos.smartframework.smartorm.repository;
 
+import android.util.Log;
+
+import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
 import com.arcthos.smartframework.smartorm.SmartObject;
 import com.google.gson.Gson;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
@@ -7,6 +11,7 @@ import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,13 +21,13 @@ import java.util.List;
 
 public abstract class Repository<T extends SmartObject> {
     private final SmartStore store;
-    private final String soup;
+    private String soup;
     private final Class<T> typeClass;
 
-    public Repository(final SmartStore store, final String soup, final Class<T> typeClass) {
+    public Repository(final SmartStore store, final Class<T> typeClass) {
         this.store = store;
-        this.soup = soup;
         this.typeClass = typeClass;
+        getSoup();
     }
 
     public T create(T model) throws JSONException {
@@ -113,5 +118,23 @@ public abstract class Repository<T extends SmartObject> {
         }
 
         return responses;
+    }
+
+    private void getSoup() {
+        if(!typeClass.isAnnotationPresent(SObject.class)) {
+            try {
+                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + typeClass.getSimpleName());
+            } catch (SObjectAnnotationNotFoundException e) {
+                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
+                this.soup = "";
+                return;
+            }
+        }
+
+        for(Annotation annotation : typeClass.getAnnotations()) {
+            if(annotation instanceof SObject){
+                this.soup = ((SObject)annotation).value();
+            }
+        }
     }
 }
