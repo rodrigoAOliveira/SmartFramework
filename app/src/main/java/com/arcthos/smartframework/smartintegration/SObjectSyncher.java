@@ -10,8 +10,11 @@ import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.smartsync.manager.SyncManager;
+import com.salesforce.androidsdk.smartsync.target.SoqlSyncDownTarget;
+import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
 import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
 import com.salesforce.androidsdk.smartsync.util.Constants;
+import com.salesforce.androidsdk.smartsync.util.SOQLBuilder;
 import com.salesforce.androidsdk.smartsync.util.SyncOptions;
 import com.salesforce.androidsdk.smartsync.util.SyncState;
 
@@ -29,7 +32,7 @@ import java.util.TimeZone;
  * Created by Vinicius Damiati on 11-Oct-17.
  */
 
-public class BaseSobjectSyncher<T extends SmartObject>{
+public class SObjectSyncher<T extends SmartObject>{
 
     public static final Integer LIMIT = 50000;
 
@@ -39,12 +42,15 @@ public class BaseSobjectSyncher<T extends SmartObject>{
     private final Class<T> type;
     private final ModelBuildingHelper modelBuildingHelper;
     private String where;
+    private long syncId = -1;
+    private final SyncCallback syncCallback;
 
-    public BaseSobjectSyncher(final Class<T> type) {
+    public SObjectSyncher(final Class<T> type, final SyncCallback syncCallback) {
         this.currentUser = SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
         this.smartStore = SmartSyncSDKManager.getInstance().getSmartStore(currentUser);
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
+        this.syncCallback = syncCallback;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
     }
@@ -60,11 +66,35 @@ public class BaseSobjectSyncher<T extends SmartObject>{
         return where;
     }
 
-    public synchronized void syncUp(final boolean doSyncdownAfter) {
+    public String getWhere() {
+        return where;
+    }
+
+    public void setWhere(String where) {
+        this.where = where;
+    }
+
+    public boolean hasSoup() {
+        if(smartStore.hasSoup(modelBuildingHelper.getSObjectName())) {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public synchronized void syncUp() {
+        syncUp(false, null);
+    }
+
+    public synchronized void syncUpAndDown() {
+        syncUp(true, null);
+    }
+
+    private synchronized void syncUp(final boolean doSyncdownAfter) {
         syncUp(doSyncdownAfter, null);
     }
 
-    public synchronized void syncUp(final boolean doSyncdownAfter, final String id) {
+    private synchronized void syncUp(final boolean doSyncdownAfter, final String id) {
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
 
         SyncUpTarget target;
@@ -88,19 +118,22 @@ public class BaseSobjectSyncher<T extends SmartObject>{
                 @Override
                 public void onUpdate(SyncState sync) {
                     if (SyncState.Status.DONE.equals(sync.getStatus()) || SyncState.Status.FAILED.equals(sync.getStatus())) {
-                        //fireSyncUpCompleteIntent(sync.getStatus());
-
                         try {
                             if (SyncState.Status.DONE.equals(sync.getStatus()) && doSyncdownAfter) {
-                                if (id != null)
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
+
+                                if (id != null) {
                                     where = Constants.ID + "='" + id + "'";
+                                }
 
                                 syncDown();
+                            } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
-                                System.out.println(sync.getSoupName());
+                                syncCallback.onUpFailure(sync);
                             }
                         } catch (Exception e) {
-                            e.printStackTrace();
+                            Log.e(type.getSimpleName(), e.getMessage(), e);
                         }
                     }
                 }
@@ -115,6 +148,44 @@ public class BaseSobjectSyncher<T extends SmartObject>{
     }
 
     public synchronized void syncDown() {
+        String sObjectName = modelBuildingHelper.getSObjectName();
+        smartStore.registerSoup(sObjectName, modelBuildingHelper.getIndexSpecs());
+        final SyncManager.SyncUpdateCallback callback = new SyncManager.SyncUpdateCallback() {
+            @Override
+            public void onUpdate(SyncState sync) {
+                if (SyncState.Status.DONE.equals(sync.getStatus())) {
+                    syncCallback.onDownSuccess(sync, sync.getTotalSize(), sync.getSoupName());
+                } else if(SyncState.Status.FAILED.equals(sync.getStatus())) {
+                    syncCallback.onDownFailure(sync);
+                }
+            }
+        };
+        try {
+            if (syncId == -1) {
+                List<String> fieldsSyncDown = modelBuildingHelper.getFieldsToSyncDown();
 
+                final SyncOptions options = SyncOptions.optionsForSyncDown(SyncState.MergeMode.OVERWRITE);
+                final String soqlQuery = SOQLBuilder.
+                        getInstanceWithFields(fieldsSyncDown)
+                        .from(sObjectName)
+                        .where(where)
+                        .limit(LIMIT).build();
+                Log.d(sObjectName + "::QUERY SOQL:", soqlQuery);
+                final SyncDownTarget target = new SoqlSyncDownTarget(soqlQuery);
+
+                try {
+                    final SyncState sync = syncMgr.syncDown(target, options, sObjectName, callback);
+                    syncId = sync.getId();
+                } catch (Exception ex) {
+                    Log.e(type.getSimpleName(), ex.getMessage(), ex);
+                }
+            } else {
+                syncMgr.reSync(syncId, callback);
+            }
+        } catch (JSONException e) {
+            Log.e(type.getSimpleName(), "JSONException occurred while parsing", e);
+        } catch (SyncManager.SmartSyncException e) {
+            Log.e(type.getSimpleName(), "SmartSyncException occurred while attempting to sync down", e);
+        }
     }
 }
