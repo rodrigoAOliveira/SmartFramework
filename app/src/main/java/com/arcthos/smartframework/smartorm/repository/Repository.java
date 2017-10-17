@@ -3,10 +3,13 @@ package com.arcthos.smartframework.smartorm.repository;
 import android.util.Log;
 
 import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.smartorm.Condition;
 import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
 import com.arcthos.smartframework.smartorm.SmartObject;
+import com.arcthos.smartframework.smartorm.SmartSelect;
 import com.google.gson.Gson;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
+import com.salesforce.androidsdk.smartsync.util.Constants;
 
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -118,6 +121,14 @@ public abstract class Repository<T extends SmartObject> {
         }
 
         return responses;
+    }
+
+    public T find(String id) {
+        T model = SmartSelect.from(store, typeClass)
+                .where(Condition.prop(Constants.ID).eq(id))
+                .first();
+
+        return model;
     }
 
     private void getSoup() {
