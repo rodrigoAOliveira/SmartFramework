@@ -8,4 +8,6 @@ public interface TokenCallback {
     void noConnection();
 
     void onFailure(ResponseBody errorBody);
+
+    void onException(Throwable t);
 }

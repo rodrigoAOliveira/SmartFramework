@@ -1,10 +1,15 @@
 package com.arcthos.smartframework.smartintegration.helpers;
 
+import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.arcthos.smartframework.smartintegration.PreferencesManager;
 import com.salesforce.androidsdk.accounts.UserAccount;
+import com.salesforce.androidsdk.app.SalesforceSDKManager;
+import com.salesforce.androidsdk.smartstore.store.SmartStore;
+import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 
 import retrofit2.Call;
 import retrofit2.Callback;
@@ -28,8 +33,13 @@ public class NetworkHelper {
     }
 
     public static void validateToken(Context context, UserAccount user, final TokenCallback tokenCallback) {
+        if(!isConnected(context)) {
+            tokenCallback.noConnection();
+            return;
+        }
+
         Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(user.getInstanceServer())
+                .baseUrl(user.getInstanceServer() + "/")
                 .addConverterFactory(GsonConverterFactory.create()).build();
 
         RefreshTokenService refreshTokenService = retrofit.create(RefreshTokenService.class);
@@ -47,8 +57,16 @@ public class NetworkHelper {
 
             @Override
             public void onFailure(Call<RefreshToken> call, Throwable t) {
-                //TODO: validate failure, and lack of connection
+                tokenCallback.onException(t);
             }
         });
+    }
+
+    public static void logoff(Activity activity, UserAccount user) {
+        PreferencesManager.getInstance().clear();
+        SmartStore smartStore = SmartSyncSDKManager.getInstance().getSmartStore(user);
+        smartStore.dropAllSoups();
+        SalesforceSDKManager.getInstance().logout(activity);
+        System.exit(0);
     }
 }
