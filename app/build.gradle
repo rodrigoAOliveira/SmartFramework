@@ -28,5 +28,7 @@ dependencies {
     compile 'com.salesforce.mobilesdk:SalesforceSDK:5.2.0'
     compile 'com.salesforce.mobilesdk:SmartStore:5.2.0'
     compile 'com.salesforce.mobilesdk:SmartSync:5.2.0'
+    compile 'com.squareup.retrofit2:retrofit:2.3.0'
+    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
     testCompile 'junit:junit:4.12'
 }

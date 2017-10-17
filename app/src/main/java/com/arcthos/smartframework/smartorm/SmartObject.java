@@ -1,9 +1,16 @@
 package com.arcthos.smartframework.smartorm;
 
+import android.util.Log;
+
+import com.arcthos.smartframework.annotations.Ignore;
+import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.annotations.Sync;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
+import com.salesforce.androidsdk.smartsync.model.SalesforceObject;
 
 import java.io.Serializable;
+import java.lang.annotation.Annotation;
 import java.util.UUID;
 
 /**
@@ -11,41 +18,68 @@ import java.util.UUID;
  */
 
 public abstract class SmartObject implements Serializable {
+    @Sync(up = false)
     @SerializedName("Id")
     protected String id;
 
     @SerializedName("Name")
     protected String name;
 
+    @Ignore
+    @Sync(up = false, down = false)
     protected Attributes attributes;
 
+    @Sync(up = false)
     @SerializedName("IsDeleted")
     protected boolean deleted;
 
+    @Sync(up = false)
     @SerializedName("LastModifiedDate")
     protected String lastModifiedDate;
 
+    @Sync(up = false, down = false)
     @SerializedName("__locally_created__")
     protected boolean locallyCreated;
 
+    @Sync(up = false, down = false)
     @SerializedName("__locally_updated__")
     protected boolean locallyUpdated;
 
+    @Sync(up = false, down = false)
     @SerializedName("__locally_deleted__")
     protected boolean locallyDeleted;
 
+    @Sync(up = false, down = false)
     @SerializedName("__local__")
     protected boolean local;
 
+    @Ignore
+    @Sync(up = false, down = false)
     @Expose(serialize = false)
     @SerializedName("_soupEntryId")
     protected int soupEntryId;
 
-    public SmartObject(String sObjectName) {
+    public SmartObject(Class<?> extendedClass) {
         this.attributes = new Attributes();
-        this.attributes.setType(sObjectName);
         this.soupEntryId = -1;
         this.id = UUID.randomUUID().toString();
+
+        if(!extendedClass.isAnnotationPresent(SObject.class)) {
+            try {
+                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + extendedClass.getSimpleName());
+            } catch (SObjectAnnotationNotFoundException e) {
+                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
+                this.attributes.setType("");
+                return;
+            }
+        }
+
+        for(Annotation annotation : extendedClass.getAnnotations()) {
+            if(annotation instanceof SObject){
+                this.attributes.setType(((SObject)annotation).value());
+                return;
+            }
+        }
     }
 
     public String getId() {
@@ -127,4 +161,14 @@ public abstract class SmartObject implements Serializable {
     public void setSoupEntryId(int soupEntryId) {
         this.soupEntryId = soupEntryId;
     }
+
+    public boolean isLocallyModified() {
+        if(locallyCreated || locallyDeleted || locallyUpdated) {
+            return true;
+        }
+
+        return false;
+    }
+
+    public abstract String getWhere();
 }
