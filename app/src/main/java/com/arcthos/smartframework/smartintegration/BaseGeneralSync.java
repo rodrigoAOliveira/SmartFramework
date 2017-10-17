@@ -3,6 +3,7 @@ package com.arcthos.smartframework.smartintegration;
 import android.content.Context;
 import android.os.AsyncTask;
 
+import com.arcthos.smartframework.smartorm.SmartObject;
 import com.salesforce.androidsdk.smartsync.util.Constants;
 
 import java.text.ParseException;
@@ -16,6 +17,8 @@ import java.util.TimeZone;
  */
 
 public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
+
+    public static final String LAST_SYNC = "lastSync";
 
     private Context context;
     private SyncCallback syncCallback;
@@ -45,7 +48,7 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     private synchronized void performSync() {
-        String lastUpdate = PreferencesManager.getInstance().getStringValue("lastUpdate");
+        String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);
 
         syncObjects();
@@ -58,10 +61,10 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        PreferencesManager.getInstance().setValue("lastUpdate", sdf.format(new Date()));
+        PreferencesManager.getInstance().setValue(LAST_SYNC, sdf.format(new Date()));
     }
 
-    protected void syncObject(Class<?> model) {
+    protected void syncObject(Class<? extends SmartObject> model) {
         SObjectSyncher SObjectSyncher = new SObjectSyncher(model, syncCallback);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate;
         SObjectSyncher.setWhere(where);
@@ -71,6 +74,10 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         } else {
             SObjectSyncher.syncUpAndDown();
         }
+    }
+
+    public String getFormattedLastUpdate() {
+        return formattedLastUpdate;
     }
 
     @Override

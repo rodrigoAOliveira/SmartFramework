@@ -2,11 +2,11 @@ package com.arcthos.smartframework.smartintegration;
 
 import android.util.Log;
 
+import com.arcthos.smartframework.smartintegration.helpers.ModelBuildingHelper;
 import com.arcthos.smartframework.smartorm.Condition;
 import com.arcthos.smartframework.smartorm.SmartObject;
 import com.arcthos.smartframework.smartorm.SmartSelect;
 import com.salesforce.androidsdk.accounts.UserAccount;
-import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.smartsync.manager.SyncManager;
@@ -22,7 +22,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;

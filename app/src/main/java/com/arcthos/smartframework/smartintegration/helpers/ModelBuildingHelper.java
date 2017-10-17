@@ -1,4 +1,4 @@
-package com.arcthos.smartframework.smartintegration;
+package com.arcthos.smartframework.smartintegration.helpers;
 
 import android.util.Log;
 
