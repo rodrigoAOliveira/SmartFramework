@@ -107,7 +107,9 @@ public class SmartSelect<T> implements Iterable {
                         .append(condition.getProperty())
                         .append("} ")
                         .append(condition.getCheckSymbol())
-                        .append("? ");
+                        .append("'")
+                        .append(condition.getValue().toString())
+                        .append("'");
                 args.add(condition.getValue());
             }
         }
