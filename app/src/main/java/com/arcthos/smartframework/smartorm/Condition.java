@@ -32,8 +32,44 @@ public class Condition {
         return this;
     }
 
+    public Condition likePrefix(Object value) {
+        setValue("%" + value);
+        check = Check.LIKE;
+        return this;
+    }
+
+    public Condition likeSufix(Object value) {
+        setValue(value + "%");
+        check = Check.LIKE;
+        return this;
+    }
+
+    public Condition likeAll(Object value) {
+        setValue("%" + value + "%");
+        check = Check.LIKE;
+        return this;
+    }
+
     public Condition notLike(Object value) {
         setValue(value);
+        check = Check.NOT_LIKE;
+        return this;
+    }
+
+    public Condition notLikePrefix(Object value) {
+        setValue("%" + value);
+        check = Check.NOT_LIKE;
+        return this;
+    }
+
+    public Condition notLikeSufix(Object value) {
+        setValue(value + "%");
+        check = Check.NOT_LIKE;
+        return this;
+    }
+
+    public Condition notLikeAll(Object value) {
+        setValue("%" + value + "%");
         check = Check.NOT_LIKE;
         return this;
     }
