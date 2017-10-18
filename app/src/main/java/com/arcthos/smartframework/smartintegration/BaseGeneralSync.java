@@ -31,8 +31,9 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     private String formatLastUpdate(String lastUpdate) {
+        Locale locale = context.getResources().getConfiguration().locale;
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", new Locale("PT", "BR"));
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", locale);
 
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         sdf2.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -65,7 +66,7 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
-        SObjectSyncher SObjectSyncher = new SObjectSyncher(model, syncCallback);
+        SObjectSyncher SObjectSyncher = new SObjectSyncher(model, context, syncCallback);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate;
         SObjectSyncher.setWhere(where);
 
