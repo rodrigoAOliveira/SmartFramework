@@ -22,7 +22,7 @@ import java.util.List;
 
 public class SmartSelect<T> implements Iterable {
 
-    private static final int LIMIT = 5000;
+    private static final int LIMIT = 50000;
     private Class<T> record;
     private String soup;
     private String[] arguments;
