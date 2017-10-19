@@ -71,9 +71,9 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         SObjectSyncher.setWhere(where);
 
         if(SObjectSyncher.hasSoup()) {
-            SObjectSyncher.syncDown();
-        } else {
             SObjectSyncher.syncUpAndDown();
+        } else {
+            SObjectSyncher.syncDown();
         }
     }
 
