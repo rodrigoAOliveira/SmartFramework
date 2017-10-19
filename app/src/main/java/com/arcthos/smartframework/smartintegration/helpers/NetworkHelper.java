@@ -43,7 +43,8 @@ public class NetworkHelper {
                 .addConverterFactory(GsonConverterFactory.create()).build();
 
         RefreshTokenService refreshTokenService = retrofit.create(RefreshTokenService.class);
-        Call<RefreshToken> call = refreshTokenService.getRefreshToken("grant_type", user.getClientId(), user.getRefreshToken());
+
+        Call<RefreshToken> call = refreshTokenService.getRefreshToken(new RefreshTokenRequest("grant_type", user.getClientId(), user.getRefreshToken()));
 
         call.enqueue(new Callback<RefreshToken>() {
             @Override
