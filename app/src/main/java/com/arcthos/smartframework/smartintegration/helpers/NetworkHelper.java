@@ -62,7 +62,13 @@ public class NetworkHelper {
         });
     }
 
+    public static void prepareForFullSync(Context context) {
+        PreferencesManager.initialize(context);
+        PreferencesManager.getInstance().clear();
+    }
+
     public static void logoff(Activity activity, UserAccount user) {
+        PreferencesManager.initialize(activity);
         PreferencesManager.getInstance().clear();
         SmartStore smartStore = SmartSyncSDKManager.getInstance().getSmartStore(user);
         smartStore.dropAllSoups();
