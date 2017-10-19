@@ -52,9 +52,9 @@ public class SObjectSyncher<T extends SmartObject>{
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
         this.syncCallback = syncCallback;
+        this.context = context;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
-        this.context = context;
     }
 
     private String getDefaultWhere() {
