@@ -1,8 +1,8 @@
 package com.arcthos.smartframework.smartintegration.helpers;
 
 import retrofit2.Call;
-import retrofit2.http.Body;
 import retrofit2.http.Field;
+import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.POST;
 
 /**
@@ -10,6 +10,10 @@ import retrofit2.http.POST;
  */
 
 public interface RefreshTokenService {
+    @FormUrlEncoded
     @POST("services/oauth2/token")
-    Call<RefreshToken> getRefreshToken(@Body RefreshTokenRequest refreshTokenRequest);
+    Call<RefreshToken> getRefreshToken(
+            @Field("grant_type") String grantType,
+            @Field("client_id") String clientId,
+            @Field("refresh_token") String refreshToken);
 }
