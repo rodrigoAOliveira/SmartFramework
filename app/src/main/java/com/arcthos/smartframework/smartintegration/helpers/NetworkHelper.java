@@ -43,7 +43,7 @@ public class NetworkHelper {
                 .addConverterFactory(GsonConverterFactory.create()).build();
 
         RefreshTokenService refreshTokenService = retrofit.create(RefreshTokenService.class);
-        Call<RefreshToken> call = refreshTokenService.getRefreshToken("grant_type", user.getClientId(), user.getRefreshToken());
+        Call<RefreshToken> call = refreshTokenService.getRefreshToken("refresh_token", user.getClientId(), user.getRefreshToken());
 
         call.enqueue(new Callback<RefreshToken>() {
             @Override
@@ -62,7 +62,13 @@ public class NetworkHelper {
         });
     }
 
+    public static void prepareForFullSync(Context context) {
+        PreferencesManager.initialize(context);
+        PreferencesManager.getInstance().clear();
+    }
+
     public static void logoff(Activity activity, UserAccount user) {
+        PreferencesManager.initialize(activity);
         PreferencesManager.getInstance().clear();
         SmartStore smartStore = SmartSyncSDKManager.getInstance().getSmartStore(user);
         smartStore.dropAllSoups();

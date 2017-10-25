@@ -17,12 +17,12 @@ import java.util.UUID;
  * Created by Vinicius Damiati on 05-Oct-17.
  */
 
-public abstract class SmartObject implements Serializable {
+public abstract class SmartObject implements Serializable, Cloneable {
     @Sync(up = false)
-    @SerializedName("Id")
+    @SerializedName(SmartObjectConstants.ID)
     protected String id;
 
-    @SerializedName("Name")
+    @SerializedName(SmartObjectConstants.NAME)
     protected String name;
 
     @Ignore
@@ -30,33 +30,33 @@ public abstract class SmartObject implements Serializable {
     protected Attributes attributes;
 
     @Sync(up = false)
-    @SerializedName("IsDeleted")
+    @SerializedName(SmartObjectConstants.IS_DELETED)
     protected boolean deleted;
 
     @Sync(up = false)
-    @SerializedName("LastModifiedDate")
+    @SerializedName(SmartObjectConstants.LAST_MODIFIED_DATE)
     protected String lastModifiedDate;
 
     @Sync(up = false, down = false)
-    @SerializedName("__locally_created__")
+    @SerializedName(SmartObjectConstants.LOCALLY_CREATE)
     protected boolean locallyCreated;
 
     @Sync(up = false, down = false)
-    @SerializedName("__locally_updated__")
+    @SerializedName(SmartObjectConstants.LOCALLY_UPDATED)
     protected boolean locallyUpdated;
 
     @Sync(up = false, down = false)
-    @SerializedName("__locally_deleted__")
+    @SerializedName(SmartObjectConstants.LOCALLY_DELETED)
     protected boolean locallyDeleted;
 
     @Sync(up = false, down = false)
-    @SerializedName("__local__")
+    @SerializedName(SmartObjectConstants.LOCAL)
     protected boolean local;
 
     @Ignore
     @Sync(up = false, down = false)
     @Expose(serialize = false)
-    @SerializedName("_soupEntryId")
+    @SerializedName(SmartObjectConstants.SOUP_ENTRY_ID)
     protected int soupEntryId;
 
     public SmartObject(Class<?> extendedClass) {

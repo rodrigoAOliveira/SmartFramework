@@ -1,16 +1,24 @@
 package com.arcthos.smartframework.smartintegration;
 
 import android.content.Context;
+import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
+import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 
+import com.arcthos.smartframework.annotations.SObject;
 import com.arcthos.smartframework.smartorm.SmartObject;
 import com.salesforce.androidsdk.smartsync.util.Constants;
 
+import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Enumeration;
 import java.util.Locale;
 import java.util.TimeZone;
+
+import dalvik.system.DexFile;
 
 /**
  * Created by Vinicius Damiati on 16-Oct-17.
@@ -31,8 +39,9 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     private String formatLastUpdate(String lastUpdate) {
+        Locale locale = context.getResources().getConfiguration().locale;
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
-        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", new Locale("PT", "BR"));
+        SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", locale);
 
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         sdf2.setTimeZone(TimeZone.getTimeZone("UTC"));
@@ -65,19 +74,56 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
-        SObjectSyncher SObjectSyncher = new SObjectSyncher(model, syncCallback);
+        SObjectSyncher SObjectSyncher = new SObjectSyncher(model, context, syncCallback);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate;
         SObjectSyncher.setWhere(where);
 
         if(SObjectSyncher.hasSoup()) {
-            SObjectSyncher.syncDown();
-        } else {
             SObjectSyncher.syncUpAndDown();
+        } else {
+            SObjectSyncher.syncDown();
         }
     }
 
     public String getFormattedLastUpdate() {
         return formattedLastUpdate;
+    }
+
+    public int getAmountSObjectClasses() {
+        int sObjectsAmount = 0;
+
+        ApplicationInfo applicationInfo = context.getApplicationInfo();
+        String classPath = applicationInfo.sourceDir;
+
+        DexFile dexFile = null;
+        try {
+            dexFile = new DexFile(classPath);
+
+            Enumeration<String> iter = dexFile.entries();
+            while (iter.hasMoreElements()) {
+                String classCanonicalName = iter.nextElement();
+                Class clazz = null;
+                try {
+                    clazz = context.getClassLoader().loadClass(classCanonicalName);
+                    if(clazz.isAnnotationPresent(SObject.class)) {
+                        sObjectsAmount++;
+                    }
+                } catch (ClassNotFoundException e) {
+                    continue;
+                }
+            }
+
+            return sObjectsAmount;
+        } catch (IOException e) {
+            Log.e(BaseGeneralSync.class.getSimpleName(), e.getMessage(), e);
+            return -1;
+        } finally {
+            try {
+                dexFile.close();
+            } catch (IOException e) {
+                Log.e(BaseGeneralSync.class.getSimpleName(), e.getMessage(), e);
+            }
+        }
     }
 
     @Override

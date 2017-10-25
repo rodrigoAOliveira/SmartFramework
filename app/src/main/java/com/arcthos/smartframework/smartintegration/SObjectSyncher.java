@@ -1,5 +1,6 @@
 package com.arcthos.smartframework.smartintegration;
 
+import android.content.Context;
 import android.util.Log;
 
 import com.arcthos.smartframework.smartintegration.helpers.ModelBuildingHelper;
@@ -43,19 +44,22 @@ public class SObjectSyncher<T extends SmartObject>{
     private String where;
     private long syncId = -1;
     private final SyncCallback syncCallback;
+    private final Context context;
 
-    public SObjectSyncher(final Class<T> type, final SyncCallback syncCallback) {
+    public SObjectSyncher(final Class<T> type, final Context context, final SyncCallback syncCallback) {
         this.currentUser = SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
         this.smartStore = SmartSyncSDKManager.getInstance().getSmartStore(currentUser);
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
         this.syncCallback = syncCallback;
+        this.context = context;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
     }
 
     private String getDefaultWhere() {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", new Locale("PT", "BR"));
+        Locale locale = context.getResources().getConfiguration().locale;
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", locale);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
         String now = sdf.format(new Date());
