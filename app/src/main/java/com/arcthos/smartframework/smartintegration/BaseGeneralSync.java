@@ -3,18 +3,21 @@ package com.arcthos.smartframework.smartintegration;
 import android.content.Context;
 import android.content.pm.ApplicationInfo;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 
 import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.annotations.SoqlWhere;
 import com.arcthos.smartframework.smartorm.SmartObject;
 import com.salesforce.androidsdk.smartsync.util.Constants;
 
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
+import java.util.List;
 import java.util.Locale;
 import java.util.TimeZone;
 
@@ -74,14 +77,35 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
-        SObjectSyncher SObjectSyncher = new SObjectSyncher(model, context, syncCallback);
-        String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate;
-        SObjectSyncher.setWhere(where);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback);
+        String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
+        sObjectSyncher.setWhere(where);
 
-        if(SObjectSyncher.hasSoup()) {
-            SObjectSyncher.syncUpAndDown();
+        if(sObjectSyncher.hasSoup()) {
+            sObjectSyncher.syncUpAndDown();
         } else {
-            SObjectSyncher.syncDown();
+            sObjectSyncher.syncDown();
+        }
+    }
+
+    private String getCustomWhere(Class<? extends SmartObject> model) {
+        String where = "";
+
+        List<Field> fields = Arrays.asList(model.getDeclaredFields());
+        for(Field field : fields) {
+            if(field.isAnnotationPresent(SoqlWhere.class)) {
+                where = invoke(field.getName(), model);
+            }
+        }
+
+        return where;
+    }
+
+    private String invoke(String field, Class<? extends SmartObject> model) {
+        try {
+            return (String) model.getField(field).get(null);
+        } catch (Exception e) {
+            return "";
         }
     }
 

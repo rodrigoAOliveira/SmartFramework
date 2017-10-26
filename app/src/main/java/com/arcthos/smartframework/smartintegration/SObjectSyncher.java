@@ -101,10 +101,11 @@ public class SObjectSyncher<T extends SmartObject>{
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
 
         SyncUpTarget target;
+        JSONObject object = null;
         if (id == null) {
             target = new SyncUpTarget();
         } else {
-            JSONObject object = SmartSelect.from(smartStore, type)
+            object = SmartSelect.from(smartStore, type)
                     .where(Condition.prop(Constants.ID).eq(id))
                     .rawFirst();
             try {
@@ -117,13 +118,14 @@ public class SObjectSyncher<T extends SmartObject>{
         final SyncOptions options = SyncOptions.optionsForSyncUp(fieldsSyncUp, SyncState.MergeMode.OVERWRITE);
 
         try {
+            final JSONObject finalObject = object;
             syncMgr.syncUp(target, options, modelBuildingHelper.getSObjectName(), new SyncManager.SyncUpdateCallback() {
                 @Override
                 public void onUpdate(SyncState sync) {
                     if (SyncState.Status.DONE.equals(sync.getStatus()) || SyncState.Status.FAILED.equals(sync.getStatus())) {
                         try {
                             if (SyncState.Status.DONE.equals(sync.getStatus()) && doSyncdownAfter) {
-                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName(), finalObject);
 
                                 if (id != null) {
                                     where = Constants.ID + "='" + id + "'";
@@ -131,7 +133,7 @@ public class SObjectSyncher<T extends SmartObject>{
 
                                 syncDown();
                             } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
-                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName(), finalObject);
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
                                 syncCallback.onUpFailure(sync);
                             }
