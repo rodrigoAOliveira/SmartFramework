@@ -125,7 +125,7 @@ public class SObjectSyncher<T extends SmartObject>{
                     if (SyncState.Status.DONE.equals(sync.getStatus()) || SyncState.Status.FAILED.equals(sync.getStatus())) {
                         try {
                             if (SyncState.Status.DONE.equals(sync.getStatus()) && doSyncdownAfter) {
-                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName(), finalObject);
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
 
                                 if (id != null) {
                                     where = Constants.ID + "='" + id + "'";
@@ -133,9 +133,9 @@ public class SObjectSyncher<T extends SmartObject>{
 
                                 syncDown();
                             } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
-                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName(), finalObject);
+                                syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
-                                syncCallback.onUpFailure(sync);
+                                syncCallback.onUpFailure(sync, finalObject);
                             }
                         } catch (Exception e) {
                             Log.e(type.getSimpleName(), e.getMessage(), e);

@@ -9,8 +9,8 @@ import org.json.JSONObject;
  */
 
 public interface SyncCallback {
-    void onUpSuccess(SyncState sync, SyncState.Status status, String sObjectName, JSONObject jsonObject);
-    void onUpFailure(SyncState sync);
+    void onUpSuccess(SyncState sync, SyncState.Status status, String sObjectName);
+    void onUpFailure(SyncState sync, JSONObject jsonObject);
     void onDownSuccess(SyncState sync, int size, String sObjectName);
     void onDownFailure(SyncState sync);
 }
