@@ -169,6 +169,4 @@ public abstract class SmartObject implements Serializable, Cloneable {
 
         return false;
     }
-
-    public abstract String getWhere();
 }
