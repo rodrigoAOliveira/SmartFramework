@@ -22,9 +22,6 @@ public abstract class SmartObject implements Serializable, Cloneable {
     @SerializedName(SmartObjectConstants.ID)
     protected String id;
 
-    @SerializedName(SmartObjectConstants.NAME)
-    protected String name;
-
     @Ignore
     @Sync(up = false, down = false)
     protected Attributes attributes;
@@ -88,14 +85,6 @@ public abstract class SmartObject implements Serializable, Cloneable {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
     }
 
     public Attributes getAttributes() {

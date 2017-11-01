@@ -6,7 +6,6 @@ package com.arcthos.smartframework.smartorm;
 
 public class SmartObjectConstants {
     public static final String ID = "Id";
-    public static final String NAME = "Name";
     public static final String IS_DELETED = "IsDeleted";
     public static final String LAST_MODIFIED_DATE = "LastModifiedDate";
     public static final String LOCALLY_CREATE = "__locally_created__";
