@@ -133,13 +133,9 @@ public abstract class Repository<T extends SmartObject> {
 
     private void getSoup() {
         if(!typeClass.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + typeClass.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                this.soup = "";
-                return;
-            }
+            Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + typeClass.getSimpleName());
+            this.soup = "";
+            return;
         }
 
         for(Annotation annotation : typeClass.getAnnotations()) {

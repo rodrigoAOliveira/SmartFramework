@@ -25,11 +25,7 @@ public class NetworkHelper {
     public static boolean isConnected(Context context) {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
-        if (activeNetInfo != null && activeNetInfo.isConnected()) {
-            return true;
-        } else {
-            return false;
-        }
+        return activeNetInfo != null && activeNetInfo.isConnected();
     }
 
     public static void validateToken(Context context, UserAccount user, final TokenCallback tokenCallback) {

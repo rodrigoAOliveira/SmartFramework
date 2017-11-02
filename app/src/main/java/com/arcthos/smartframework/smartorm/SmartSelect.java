@@ -163,21 +163,13 @@ public class SmartSelect<T> implements Iterable {
 
     public List<T> list() {
         if(record == null) {
-            try {
-                throw new ModelNotFoundException("You can only do a RAW call when you are not using a model.");
-            } catch (ModelNotFoundException e) {
-                Log.e(SmartSelect.class.getSimpleName() + "::LIST", e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartSelect.class.getSimpleName() + "::LIST", "You can only do a RAW call when you are not using a model.");
+            return null;
         }
 
         if(!record.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + record.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartObject.class.getSimpleName(), "SObject annotation missing in model class: " + record.getSimpleName());
+            return null;
         }
 
         if (arguments == null) {
@@ -212,12 +204,8 @@ public class SmartSelect<T> implements Iterable {
         }
 
         if(!record.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + record.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartObject.class.getSimpleName(), "SObject annotation missing in model class: " + record.getSimpleName());
+            return null;
         }
 
         String sql = toSql();
@@ -241,21 +229,13 @@ public class SmartSelect<T> implements Iterable {
 
     public T first() {
         if(record == null) {
-            try {
-                throw new ModelNotFoundException("You can only do a RAW call when you are not using a model.");
-            } catch (ModelNotFoundException e) {
-                Log.e(SmartSelect.class.getSimpleName() + "::FIRST", e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartSelect.class.getSimpleName() + "::FIRST", "You can only do a RAW call when you are not using a model.");
+            return null;
         }
 
         if(!record.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + record.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartObject.class.getSimpleName(), "SObject annotation missing in model class: " + record.getSimpleName());
+            return null;
         }
 
         if (arguments == null) {
@@ -293,12 +273,8 @@ public class SmartSelect<T> implements Iterable {
         }
 
         if(!record.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + record.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                return null;
-            }
+            Log.e(SmartObject.class.getSimpleName(), "SObject annotation missing in model class: " + record.getSimpleName());
+            return null;
         }
 
         String sql = toSql();
@@ -361,13 +337,9 @@ public class SmartSelect<T> implements Iterable {
 
     private void getSoup() {
         if(!record.isAnnotationPresent(SObject.class)) {
-            try {
-                throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + record.getSimpleName());
-            } catch (SObjectAnnotationNotFoundException e) {
-                Log.e(SmartObject.class.getSimpleName(), e.getMessage(), e);
-                this.soup = "";
-                return;
-            }
+            Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + record.getSimpleName());
+            this.soup = "";
+            return;
         }
 
         for(Annotation annotation : record.getAnnotations()) {
