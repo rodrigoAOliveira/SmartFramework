@@ -27,10 +27,6 @@ public abstract class SmartObject implements Serializable, Cloneable {
     protected Attributes attributes;
 
     @Sync(up = false)
-    @SerializedName(SmartObjectConstants.IS_DELETED)
-    protected boolean deleted;
-
-    @Sync(up = false)
     @SerializedName(SmartObjectConstants.LAST_MODIFIED_DATE)
     protected String lastModifiedDate;
 
@@ -94,15 +90,7 @@ public abstract class SmartObject implements Serializable, Cloneable {
     public void setAttributes(Attributes attributes) {
         this.attributes = attributes;
     }
-
-    public boolean isDeleted() {
-        return deleted;
-    }
-
-    public void setDeleted(boolean deleted) {
-        this.deleted = deleted;
-    }
-
+    
     public String getLastModifiedDate() {
         return lastModifiedDate;
     }
