@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.arcthos.smartframework.annotations.Ignore;
 import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.annotations.SoqlWhere;
 import com.arcthos.smartframework.annotations.Sync;
 import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
 import com.arcthos.smartframework.smartorm.SmartObject;
@@ -65,6 +66,10 @@ public class ModelBuildingHelper<T> {
                 continue;
             }
 
+            if(field.isAnnotationPresent(SoqlWhere.class)) {
+                continue;
+            }
+
             String fieldName = "";
 
             if(field.isAnnotationPresent(SerializedName.class)) {
@@ -106,6 +111,10 @@ public class ModelBuildingHelper<T> {
     private void getFieldsToSyncByCollection(List<String> fieldsToSync, List<Field> fields, boolean syncDown) {
         for(Field field : fields) {
             if (field.isAnnotationPresent(Ignore.class)) {
+                continue;
+            }
+
+            if(field.isAnnotationPresent(SoqlWhere.class)) {
                 continue;
             }
 

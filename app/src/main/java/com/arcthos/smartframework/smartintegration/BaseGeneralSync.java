@@ -94,6 +94,7 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         List<Field> fields = Arrays.asList(model.getDeclaredFields());
         for(Field field : fields) {
             if(field.isAnnotationPresent(SoqlWhere.class)) {
+                //TODO: validate if starts with an AND or OR than put or not the AND word
                 where = invoke(field.getName(), model);
             }
         }
