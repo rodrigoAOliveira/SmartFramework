@@ -90,7 +90,7 @@ public abstract class SmartObject implements Serializable, Cloneable {
     public void setAttributes(Attributes attributes) {
         this.attributes = attributes;
     }
-    
+
     public String getLastModifiedDate() {
         return lastModifiedDate;
     }

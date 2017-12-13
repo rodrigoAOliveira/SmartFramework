@@ -23,7 +23,7 @@ import java.util.List;
  */
 
 public abstract class Repository<T extends SmartObject> {
-    private final SmartStore store;
+    protected final SmartStore store;
     private String soup;
     private final Class<T> typeClass;
 
