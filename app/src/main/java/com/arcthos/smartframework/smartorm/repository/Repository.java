@@ -123,12 +123,73 @@ public abstract class Repository<T extends SmartObject> {
         return responses;
     }
 
+    public boolean delete(T model) {
+        if(model.getSoupEntryId() == -1) {
+            return false;
+        }
+
+        store.delete(soup, model.getSoupEntryId());
+        return true;
+    }
+
+    public boolean deleteAll(List<T> models) {
+        if (models == null) {
+            return false;
+        }
+
+        if(models.isEmpty()) {
+            return false;
+        }
+
+        List<T> validModels = new ArrayList<>();
+        for(T model : models) {
+            if(model.getSoupEntryId() == -1) {
+                continue;
+            }
+            validModels.add(model);
+        }
+
+        Long[] soupEntryIds = new Long[validModels.size()];
+        for(int i = 0; i < validModels.size(); i++) {
+            soupEntryIds[i] = validModels.get(i).getSoupEntryId();
+        }
+
+        store.delete(soup, soupEntryIds);
+        return true;
+    }
+
     public T find(String id) {
+        if(id == null) {
+            return null;
+        }
+
         T model = SmartSelect.from(store, typeClass)
                 .where(Condition.prop(Constants.ID).eq(id))
                 .first();
 
         return model;
+    }
+
+    public List<T> findAll() {
+        return SmartSelect.from(store, typeClass).list();
+    }
+
+    public List<T> findAllWithLimit(int limit) {
+        return SmartSelect.from(store, typeClass)
+                .limit(String.valueOf(limit))
+                .list();
+    }
+
+    public List<T> findAllOrderByAsc(String fieldName) {
+        return SmartSelect.from(store, typeClass)
+                .orderBy(fieldName)
+                .list();
+    }
+
+    public List<T> findAllOrderByDesc(String fieldName) {
+        return SmartSelect.from(store, typeClass)
+                .orderByDesc(fieldName)
+                .list();
     }
 
     private void getSoup() {

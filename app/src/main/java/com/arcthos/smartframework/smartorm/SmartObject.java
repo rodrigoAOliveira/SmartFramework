@@ -7,7 +7,6 @@ import com.arcthos.smartframework.annotations.SObject;
 import com.arcthos.smartframework.annotations.Sync;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
-import com.salesforce.androidsdk.smartsync.model.SalesforceObject;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -50,7 +49,7 @@ public abstract class SmartObject implements Serializable, Cloneable {
     @Sync(up = false, down = false)
     @Expose(serialize = false)
     @SerializedName(SmartObjectConstants.SOUP_ENTRY_ID)
-    protected int soupEntryId;
+    protected long soupEntryId;
 
     public SmartObject(Class<?> extendedClass) {
         this.attributes = new Attributes();
@@ -131,11 +130,11 @@ public abstract class SmartObject implements Serializable, Cloneable {
         this.local = local;
     }
 
-    public int getSoupEntryId() {
+    public long getSoupEntryId() {
         return soupEntryId;
     }
 
-    public void setSoupEntryId(int soupEntryId) {
+    public void setSoupEntryId(long soupEntryId) {
         this.soupEntryId = soupEntryId;
     }
 
