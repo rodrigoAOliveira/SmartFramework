@@ -81,11 +81,7 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
-        if(sObjectSyncher.hasSoup()) {
-            sObjectSyncher.syncUpAndDown();
-        } else {
-            sObjectSyncher.syncDown();
-        }
+        new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
     private String getCustomWhere(Class<? extends SmartObject> model) {
