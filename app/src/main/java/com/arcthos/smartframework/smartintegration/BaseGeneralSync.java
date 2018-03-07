@@ -23,11 +23,13 @@ import java.util.TimeZone;
 
 import dalvik.system.DexFile;
 
+import static android.os.AsyncTask.THREAD_POOL_EXECUTOR;
+
 /**
  * Created by Vinicius Damiati on 16-Oct-17.
  */
 
-public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
+public abstract class BaseGeneralSync {
 
     public static final String LAST_SYNC = "lastSync";
 
@@ -59,7 +61,7 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         return sdf2.format(lastUpdateDate);
     }
 
-    private synchronized void performSync() {
+    public synchronized void performSync() {
         String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);
 
@@ -147,9 +149,4 @@ public abstract class BaseGeneralSync extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    @Override
-    protected Void doInBackground(Void... voids) {
-        performSync();
-        return null;
-    }
 }
