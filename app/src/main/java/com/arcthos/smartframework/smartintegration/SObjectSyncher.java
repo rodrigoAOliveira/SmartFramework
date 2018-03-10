@@ -3,10 +3,16 @@ package com.arcthos.smartframework.smartintegration;
 import android.content.Context;
 import android.util.Log;
 
+import com.arcthos.smartframework.annotations.DestinationLocalParent;
+import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.smartframework.annotations.SourceLocalParent;
 import com.arcthos.smartframework.smartintegration.helpers.ModelBuildingHelper;
 import com.arcthos.smartframework.smartorm.Condition;
 import com.arcthos.smartframework.smartorm.SmartObject;
+import com.arcthos.smartframework.smartorm.SmartObjectConstants;
 import com.arcthos.smartframework.smartorm.SmartSelect;
+import com.arcthos.smartframework.smartorm.repository.Repository;
+import com.google.gson.annotations.SerializedName;
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
@@ -19,13 +25,20 @@ import com.salesforce.androidsdk.smartsync.util.SOQLBuilder;
 import com.salesforce.androidsdk.smartsync.util.SyncOptions;
 import com.salesforce.androidsdk.smartsync.util.SyncState;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.TimeZone;
 
 /**
@@ -45,14 +58,16 @@ public class SObjectSyncher<T extends SmartObject>{
     private long syncId = -1;
     private final SyncCallback syncCallback;
     private final Context context;
+    private final boolean chainedSync;
 
-    public SObjectSyncher(final Class<T> type, final Context context, final SyncCallback syncCallback) {
+    public SObjectSyncher(final Class<T> type, final Context context, final SyncCallback syncCallback, boolean chainedSync) {
         this.currentUser = SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
         this.smartStore = SmartSyncSDKManager.getInstance().getSmartStore(currentUser);
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
         this.syncCallback = syncCallback;
         this.context = context;
+        this.chainedSync = chainedSync;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
     }
@@ -99,6 +114,13 @@ public class SObjectSyncher<T extends SmartObject>{
 
     private synchronized void syncUp(final boolean doSyncdownAfter, final String id) {
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
+        if(chainedSync) {
+            try {
+                updateChainedObject();
+            } catch (JSONException e) {
+                Log.e(type.getSimpleName(), "SmartSyncException occurred while attempting to update for chain sync", e);
+            }
+        }
 
         SyncUpTarget target;
         JSONObject object = null;
@@ -192,5 +214,95 @@ public class SObjectSyncher<T extends SmartObject>{
         } catch (SyncManager.SmartSyncException e) {
             Log.e(type.getSimpleName(), "SmartSyncException occurred while attempting to sync down", e);
         }
+    }
+
+    private void updateChainedObject() throws JSONException {
+        JSONArray models = SmartSelect.from(smartStore, type).rawList();
+        Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName = new HashMap<>();
+        Map<String, String> destinationBySource = getDestinationBySource(sourceClassBySourceFieldName);
+
+        for(int i = 0; i < models.length(); i++) {
+            boolean hasToUpdate = false;
+            JSONObject model = models.getJSONObject(i);
+
+            for(String fieldName : destinationBySource.keySet()) {
+                if(model.get(fieldName) != null) {
+                    Repository repository = new Repository(smartStore, sourceClassBySourceFieldName.get(fieldName)) {};
+                    String retrievedId = repository.findByEntryId(model.getLong(fieldName)).getId();
+                    if(retrievedId.length() > 18) continue;
+                    model.put(destinationBySource.get(fieldName), retrievedId);
+                    model.put(fieldName, null);
+                    hasToUpdate = true;
+                }
+            }
+
+            if(hasToUpdate) {
+                smartStore.update(getSoup(type), model, model.getLong(SmartObjectConstants.SOUP_ENTRY_ID));
+            }
+        }
+    }
+
+    private Map<String, String> getDestinationBySource (Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName) {
+        List<Field> sourceFields = new ArrayList<>();
+        List<Field> destinationFields = new ArrayList<>();
+        List<Field> fields = Arrays.asList(type.getDeclaredFields());
+        Map<String, String> destinationBySource = new HashMap<>();
+
+        for(Field field : fields) {
+            if (field.isAnnotationPresent(SourceLocalParent.class)) {
+                sourceFields.add(field);
+            }
+
+            if(field.isAnnotationPresent(DestinationLocalParent.class)) {
+                destinationFields.add(field);
+            }
+        }
+
+        for(Field source : sourceFields) {
+            Class<? extends SmartObject> sourceClass = null;
+            for(Annotation annotation : source.getAnnotations()) {
+                if(annotation instanceof SourceLocalParent){
+                    sourceClass = ((SourceLocalParent)annotation).model();
+                    break;
+                }
+            }
+
+            for(Field destiantion : destinationFields) {
+                Class<? extends SmartObject> destinationClass = null;
+                String fieldName = "";
+                for(Annotation annotation : source.getAnnotations()) {
+                    if(annotation instanceof DestinationLocalParent){
+                        destinationClass = ((DestinationLocalParent)annotation).model();
+                    }
+
+                    if(annotation instanceof SerializedName){
+                        fieldName = ((SerializedName)annotation).value();
+                    }
+                }
+
+                if(sourceClass != null && destinationClass != null && !fieldName.equals("") && sourceClass == destinationClass) {
+                    destinationBySource.put(source.getName(), fieldName);
+                    sourceClassBySourceFieldName.put(source.getName(), sourceClass);
+                    break;
+                }
+            }
+        }
+
+        return destinationBySource;
+    }
+
+    private String getSoup(Class<? extends SmartObject> modelClass) {
+        if(!modelClass.isAnnotationPresent(SObject.class)) {
+            Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + modelClass.getSimpleName());
+            return "";
+        }
+
+        for(Annotation annotation : modelClass.getAnnotations()) {
+            if(annotation instanceof SObject){
+                return ((SObject)annotation).value();
+            }
+        }
+
+        return "";
     }
 }

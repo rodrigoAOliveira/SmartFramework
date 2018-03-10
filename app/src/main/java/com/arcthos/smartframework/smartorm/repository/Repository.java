@@ -6,6 +6,7 @@ import com.arcthos.smartframework.annotations.SObject;
 import com.arcthos.smartframework.smartorm.Condition;
 import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
 import com.arcthos.smartframework.smartorm.SmartObject;
+import com.arcthos.smartframework.smartorm.SmartObjectConstants;
 import com.arcthos.smartframework.smartorm.SmartSelect;
 import com.google.gson.Gson;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
@@ -165,6 +166,14 @@ public abstract class Repository<T extends SmartObject> {
 
         T model = SmartSelect.from(store, typeClass)
                 .where(Condition.prop(Constants.ID).eq(id))
+                .first();
+
+        return model;
+    }
+
+    public T findByEntryId(long entryId) {
+        T model = SmartSelect.from(store, typeClass)
+                .where(Condition.prop(SmartObjectConstants.SOUP_ENTRY_ID).eq(entryId))
                 .first();
 
         return model;

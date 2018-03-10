@@ -66,10 +66,19 @@ public abstract class BaseGeneralSync {
         formattedLastUpdate = formatLastUpdate(lastUpdate);
 
         syncObjects();
+        new AsyncTask<Void, Void, Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                syncChainedObjects();
+                return null;
+            }
+        }.executeOnExecutor(THREAD_POOL_EXECUTOR);
         setLastDateUpdate();
     }
 
     protected abstract void syncObjects();
+
+    protected abstract void syncChainedObjects();
 
     private void setLastDateUpdate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
@@ -79,11 +88,23 @@ public abstract class BaseGeneralSync {
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+    }
+
+    protected void syncChainedObject(Class<? extends SmartObject> model) {
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, true);
+        String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
+        sObjectSyncher.setWhere(where);
+
+        if(sObjectSyncher.hasSoup()) {
+            sObjectSyncher.syncUpAndDown();
+        } else {
+            sObjectSyncher.syncDown();
+        }
     }
 
     private String getCustomWhere(Class<? extends SmartObject> model) {
