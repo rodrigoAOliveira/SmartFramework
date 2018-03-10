@@ -262,7 +262,7 @@ public class SObjectSyncher<T extends SmartObject>{
             Class<? extends SmartObject> sourceClass = null;
             for(Annotation annotation : source.getAnnotations()) {
                 if(annotation instanceof SourceLocalParent){
-                    sourceClass = ((SourceLocalParent)annotation).model();
+                    sourceClass = ((SourceLocalParent)annotation).value();
                     break;
                 }
             }
@@ -272,7 +272,7 @@ public class SObjectSyncher<T extends SmartObject>{
                 String fieldName = "";
                 for(Annotation annotation : source.getAnnotations()) {
                     if(annotation instanceof DestinationLocalParent){
-                        destinationClass = ((DestinationLocalParent)annotation).model();
+                        destinationClass = ((DestinationLocalParent)annotation).value();
                     }
 
                     if(annotation instanceof SerializedName){
