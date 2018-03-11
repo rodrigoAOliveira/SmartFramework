@@ -234,7 +234,9 @@ public class SObjectSyncher<T extends SmartObject>{
 
                 if(model.get(fieldName) != null) {
                     Repository repository = new Repository(smartStore, sourceClassBySourceFieldName.get(fieldName)) {};
-                    String retrievedId = repository.findByEntryId(model.getLong(fieldName)).getId();
+                    SmartObject tmpModel = repository.findByEntryId(model.getLong(fieldName));
+                    if(tmpModel == null) continue;
+                    String retrievedId = tmpModel.getId();
                     if(retrievedId.length() > 18) continue;
                     model.put(destinationBySource.get(fieldName), retrievedId);
                     model.put(fieldName, null);
