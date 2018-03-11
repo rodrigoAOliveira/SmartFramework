@@ -226,6 +226,12 @@ public class SObjectSyncher<T extends SmartObject>{
             JSONObject model = (JSONObject)((JSONArray)models.get(i)).get(0);
 
             for(String fieldName : destinationBySource.keySet()) {
+                try {
+                    model.get(fieldName);
+                } catch (Exception e) {
+                    continue;
+                }
+
                 if(model.get(fieldName) != null) {
                     Repository repository = new Repository(smartStore, sourceClassBySourceFieldName.get(fieldName)) {};
                     String retrievedId = repository.findByEntryId(model.getLong(fieldName)).getId();
