@@ -223,7 +223,7 @@ public class SObjectSyncher<T extends SmartObject>{
 
         for(int i = 0; i < models.length(); i++) {
             boolean hasToUpdate = false;
-            JSONObject model = models.getJSONObject(i);
+            JSONObject model = (JSONObject)((JSONArray)models.get(i)).get(0);
 
             for(String fieldName : destinationBySource.keySet()) {
                 if(model.get(fieldName) != null) {
