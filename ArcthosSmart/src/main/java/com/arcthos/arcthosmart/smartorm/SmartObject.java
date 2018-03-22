@@ -1,10 +1,10 @@
-package com.arcthos.smartframework.smartorm;
+package com.arcthos.arcthosmart.smartorm;
 
 import android.util.Log;
 
-import com.arcthos.smartframework.annotations.Ignore;
-import com.arcthos.smartframework.annotations.SObject;
-import com.arcthos.smartframework.annotations.Sync;
+import com.arcthos.arcthosmart.annotations.Ignore;
+import com.arcthos.arcthosmart.annotations.SObject;
+import com.arcthos.arcthosmart.annotations.Sync;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 

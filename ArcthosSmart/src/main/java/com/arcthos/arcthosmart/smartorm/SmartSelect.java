@@ -1,8 +1,8 @@
-package com.arcthos.smartframework.smartorm;
+package com.arcthos.arcthosmart.smartorm;
 
 import android.util.Log;
 
-import com.arcthos.smartframework.annotations.SObject;
+import com.arcthos.arcthosmart.annotations.SObject;
 import com.google.gson.Gson;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;

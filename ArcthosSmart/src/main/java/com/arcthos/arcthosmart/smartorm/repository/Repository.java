@@ -1,13 +1,12 @@
-package com.arcthos.smartframework.smartorm.repository;
+package com.arcthos.arcthosmart.smartorm.repository;
 
 import android.util.Log;
 
-import com.arcthos.smartframework.annotations.SObject;
-import com.arcthos.smartframework.smartorm.Condition;
-import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
-import com.arcthos.smartframework.smartorm.SmartObject;
-import com.arcthos.smartframework.smartorm.SmartObjectConstants;
-import com.arcthos.smartframework.smartorm.SmartSelect;
+import com.arcthos.arcthosmart.annotations.SObject;
+import com.arcthos.arcthosmart.smartorm.Condition;
+import com.arcthos.arcthosmart.smartorm.SmartObject;
+import com.arcthos.arcthosmart.smartorm.SmartObjectConstants;
+import com.arcthos.arcthosmart.smartorm.SmartSelect;
 import com.google.gson.Gson;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.util.Constants;

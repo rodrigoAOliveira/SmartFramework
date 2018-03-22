@@ -1,13 +1,13 @@
-package com.arcthos.smartframework.smartintegration.helpers;
+package com.arcthos.arcthosmart.smartintegration.helpers;
 
 import android.util.Log;
 
-import com.arcthos.smartframework.annotations.Ignore;
-import com.arcthos.smartframework.annotations.SObject;
-import com.arcthos.smartframework.annotations.SoqlWhere;
-import com.arcthos.smartframework.annotations.Sync;
-import com.arcthos.smartframework.smartorm.SObjectAnnotationNotFoundException;
-import com.arcthos.smartframework.smartorm.SmartObject;
+import com.arcthos.arcthosmart.annotations.Ignore;
+import com.arcthos.arcthosmart.annotations.SObject;
+import com.arcthos.arcthosmart.annotations.SoqlWhere;
+import com.arcthos.arcthosmart.annotations.Sync;
+import com.arcthos.arcthosmart.smartorm.SObjectAnnotationNotFoundException;
+import com.arcthos.arcthosmart.smartorm.SmartObject;
 import com.google.gson.annotations.SerializedName;
 import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;

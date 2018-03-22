@@ -1,4 +1,4 @@
-package com.arcthos.smartframework.smartorm;
+package com.arcthos.arcthosmart.smartorm;
 
 /**
  * Created by Vinicius Damiati on 19-Oct-17.

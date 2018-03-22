@@ -1,4 +1,4 @@
-package com.arcthos.smartframework.smartintegration.helpers;
+package com.arcthos.arcthosmart.smartintegration.helpers;
 
 import okhttp3.ResponseBody;
 

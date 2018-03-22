@@ -1,11 +1,11 @@
-package com.arcthos.smartframework.smartintegration.helpers;
+package com.arcthos.arcthosmart.smartintegration.helpers;
 
 import android.app.Activity;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
-import com.arcthos.smartframework.smartintegration.PreferencesManager;
+import com.arcthos.arcthosmart.smartintegration.PreferencesManager;
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
