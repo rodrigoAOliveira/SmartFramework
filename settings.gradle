@@ -1,1 +1,1 @@
-include ':app', ':libs:SalesforceAnalytics', ':libs:SmartStore', ':libs:SalesforceSDK', ':libs:SmartSync'
+include ':app'
