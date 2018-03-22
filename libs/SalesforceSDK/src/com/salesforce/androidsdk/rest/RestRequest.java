@@ -132,7 +132,7 @@ public class RestRequest {
 		UPSERT(SERVICES_DATA + "%s/sobjects/%s/%s/%s"),
 		UPDATE(SERVICES_DATA + "%s/sobjects/%s/%s"),
 		DELETE(SERVICES_DATA + "%s/sobjects/%s/%s"),
-		QUERY(SERVICES_DATA + "%s/query"),
+		QUERY(SERVICES_DATA + "%s/queryAll"),
 		SEARCH(SERVICES_DATA + "%s/search"),
 		SEARCH_SCOPE_AND_ORDER(SERVICES_DATA + "%s/search/scopeOrder"),
 		SEARCH_RESULT_LAYOUT(SERVICES_DATA + "%s/search/layout"),
