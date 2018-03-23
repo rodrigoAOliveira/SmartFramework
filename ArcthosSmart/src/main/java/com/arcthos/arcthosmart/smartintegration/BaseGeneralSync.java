@@ -115,6 +115,8 @@ public abstract class BaseGeneralSync {
             });
         } else {
             sObjectSyncher.syncDown(null);
+            models.remove(model);
+            syncChainedObjects(models);
         }
     }
 
