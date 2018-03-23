@@ -19,7 +19,7 @@ public class SyncObjectTask extends AsyncTask<Void, Void, Void> {
         if(sObjectSyncher.hasSoup()) {
             sObjectSyncher.syncUpAndDown();
         } else {
-            sObjectSyncher.syncDown();
+            sObjectSyncher.syncDown(null);
         }
 
         return null;

@@ -101,18 +101,24 @@ public class SObjectSyncher<T extends SmartObject>{
     }
 
     public synchronized void syncUp() {
-        syncUp(false, null);
+        syncUp(false, null, null);
     }
 
     public synchronized void syncUpAndDown() {
-        syncUp(true, null);
+        syncUp(true, null, null);
     }
+
+
 
     private synchronized void syncUp(final boolean doSyncdownAfter) {
-        syncUp(doSyncdownAfter, null);
+        syncUp(doSyncdownAfter, null, null);
     }
 
-    private synchronized void syncUp(final boolean doSyncdownAfter, final String id) {
+    public synchronized void chainedSyncUpAndDown(ChainedCallback chainedCallback) {
+        syncUp(true, null, chainedCallback);
+    }
+
+    private synchronized void syncUp(final boolean doSyncdownAfter, final String id, final ChainedCallback chainedCallback) {
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
         if(chainedSync) {
             try {
@@ -153,7 +159,7 @@ public class SObjectSyncher<T extends SmartObject>{
                                     where = Constants.ID + "='" + id + "'";
                                 }
 
-                                syncDown();
+                                syncDown(chainedCallback);
                             } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
                                 syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
@@ -174,7 +180,7 @@ public class SObjectSyncher<T extends SmartObject>{
         }
     }
 
-    public synchronized void syncDown() {
+    public synchronized void syncDown(final ChainedCallback chainedCallback) {
         String sObjectName = modelBuildingHelper.getSObjectName();
         smartStore.registerSoup(sObjectName, modelBuildingHelper.getIndexSpecs());
         final SyncManager.SyncUpdateCallback callback = new SyncManager.SyncUpdateCallback() {
@@ -182,6 +188,7 @@ public class SObjectSyncher<T extends SmartObject>{
             public void onUpdate(SyncState sync) {
                 if (SyncState.Status.DONE.equals(sync.getStatus())) {
                     syncCallback.onDownSuccess(sync, sync.getTotalSize(), sync.getSoupName());
+                    if(chainedCallback != null) chainedCallback.onFinish();
                 } else if(SyncState.Status.FAILED.equals(sync.getStatus())) {
                     syncCallback.onDownFailure(sync);
                 }
