@@ -95,15 +95,26 @@ public abstract class BaseGeneralSync {
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
-    protected void syncChainedObject(Class<? extends SmartObject> model) {
+    protected void syncChainedObjects(final List<Class<? extends SmartObject>> models) {
+        if(models == null) return;
+        if(models.isEmpty()) return;
+
+        final Class<? extends SmartObject> model = models.get(0);
+
         SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, true);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
         if(sObjectSyncher.hasSoup()) {
-            sObjectSyncher.syncUpAndDown();
+            sObjectSyncher.chainedSyncUpAndDown(new ChainedCallback() {
+                @Override
+                public void onFinish() {
+                    models.remove(model);
+                    syncChainedObjects(models);
+                }
+            });
         } else {
-            sObjectSyncher.syncDown();
+            sObjectSyncher.syncDown(null);
         }
     }
 
