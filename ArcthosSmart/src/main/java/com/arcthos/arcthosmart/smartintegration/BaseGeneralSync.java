@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.Enumeration;
@@ -109,14 +110,24 @@ public abstract class BaseGeneralSync {
             sObjectSyncher.chainedSyncUpAndDown(new ChainedCallback() {
                 @Override
                 public void onFinish() {
-                    models.remove(model);
-                    syncChainedObjects(models);
+                    List<Class<? extends SmartObject>> newModels = new ArrayList<>();
+                    if(models.size() > 1) {
+                        for(int i = 1; i < models.size(); i++) {
+                            newModels.add(models.get(i));
+                        }
+                    }
+                    syncChainedObjects(newModels);
                 }
             });
         } else {
             sObjectSyncher.syncDown(null);
-            models.remove(model);
-            syncChainedObjects(models);
+            List<Class<? extends SmartObject>> newModels = new ArrayList<>();
+            if(models.size() > 1) {
+                for(int i = 1; i < models.size(); i++) {
+                    newModels.add(models.get(i));
+                }
+            }
+            syncChainedObjects(newModels);
         }
     }
 
