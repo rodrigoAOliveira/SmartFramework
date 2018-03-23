@@ -191,6 +191,7 @@ public class SObjectSyncher<T extends SmartObject>{
                     if(chainedCallback != null) chainedCallback.onFinish();
                 } else if(SyncState.Status.FAILED.equals(sync.getStatus())) {
                     syncCallback.onDownFailure(sync);
+                    if(chainedCallback != null) chainedCallback.onFinish();
                 }
             }
         };
