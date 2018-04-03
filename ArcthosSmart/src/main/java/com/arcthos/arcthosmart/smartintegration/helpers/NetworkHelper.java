@@ -29,7 +29,8 @@ public class NetworkHelper {
         return activeNetInfo != null && activeNetInfo.isConnected();
     }
 
-    public static String getLastSyncUp() {
+    public static String getLastSyncUp(Context context) {
+        PreferencesManager.initialize(context);
         return PreferencesManager.getInstance().getStringValue(BaseGeneralSync.LAST_SYNC);
     }
 
