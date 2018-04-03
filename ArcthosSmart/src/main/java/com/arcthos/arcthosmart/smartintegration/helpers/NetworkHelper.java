@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 
+import com.arcthos.arcthosmart.smartintegration.BaseGeneralSync;
 import com.arcthos.arcthosmart.smartintegration.PreferencesManager;
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
@@ -26,6 +27,10 @@ public class NetworkHelper {
         ConnectivityManager connectivityManager = (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
         NetworkInfo activeNetInfo = connectivityManager.getActiveNetworkInfo();
         return activeNetInfo != null && activeNetInfo.isConnected();
+    }
+
+    public static String getLastSyncUp() {
+        return PreferencesManager.getInstance().getStringValue(BaseGeneralSync.LAST_SYNC);
     }
 
     public static void validateToken(Context context, UserAccount user, final TokenCallback tokenCallback) {
