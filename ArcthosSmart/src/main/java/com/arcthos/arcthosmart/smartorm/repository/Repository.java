@@ -8,9 +8,11 @@ import com.arcthos.arcthosmart.smartorm.SmartObject;
 import com.arcthos.arcthosmart.smartorm.SmartObjectConstants;
 import com.arcthos.arcthosmart.smartorm.SmartSelect;
 import com.google.gson.Gson;
+import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.util.Constants;
 
+import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
@@ -198,6 +200,31 @@ public abstract class Repository<T extends SmartObject> {
         return SmartSelect.from(store, typeClass)
                 .orderByDesc(fieldName)
                 .list();
+    }
+
+    public int countLocalRegisters() {
+        if (!store.hasSoup(soup)) {
+            return 0;
+        }
+
+        String query = "Select" +
+                "               count({" + soup + ":" + SmartObjectConstants.ID + "}) " +
+                "       From " +
+                "               {" + soup + "} " +
+                "       Where " +
+                "               {" + soup + "}:{" + SmartObjectConstants.LOCAL + "} = 'true'";
+        QuerySpec querySpec = QuerySpec.buildSmartQuerySpec(query, 1);
+
+        JSONArray results;
+        int result = 0;
+        try {
+            results = store.query(querySpec, 0);
+            result = results.getJSONArray(0).getInt(0);
+        } catch (Exception e) {
+            Log.e(Repository.class.getSimpleName(), e.getMessage(), e);
+        }
+
+        return result;
     }
 
     private void getSoup() {
