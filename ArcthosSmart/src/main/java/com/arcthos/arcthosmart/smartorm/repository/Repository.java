@@ -212,7 +212,7 @@ public abstract class Repository<T extends SmartObject> {
                 "       From " +
                 "               {" + soup + "} " +
                 "       Where " +
-                "               {" + soup + "}:{" + SmartObjectConstants.LOCAL + "} = 'true'";
+                "               {" + soup + ":" + SmartObjectConstants.LOCAL + "} = 'true'";
         QuerySpec querySpec = QuerySpec.buildSmartQuerySpec(query, 1);
 
         JSONArray results;
