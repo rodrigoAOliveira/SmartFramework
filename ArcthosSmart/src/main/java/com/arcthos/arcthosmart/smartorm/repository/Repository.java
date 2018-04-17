@@ -4,6 +4,7 @@ import android.util.Log;
 
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.smartorm.Condition;
+import com.arcthos.arcthosmart.smartorm.GeneralConstants;
 import com.arcthos.arcthosmart.smartorm.SmartObject;
 import com.arcthos.arcthosmart.smartorm.SmartObjectConstants;
 import com.arcthos.arcthosmart.smartorm.SmartSelect;
@@ -166,6 +167,19 @@ public abstract class Repository<T extends SmartObject> {
         }
 
         T model = SmartSelect.from(store, typeClass)
+                .where(Condition.prop(Constants.ID).eq(id),
+                        Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
+                .first();
+
+        return model;
+    }
+
+    public T findWithDeleteds(String id) {
+        if(id == null) {
+            return null;
+        }
+
+        T model = SmartSelect.from(store, typeClass)
                 .where(Condition.prop(Constants.ID).eq(id))
                 .first();
 
@@ -181,22 +195,49 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public List<T> findAll() {
+        return SmartSelect.from(store, typeClass)
+                .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
+                .list();
+    }
+
+    public List<T> findAllWithDeleteds() {
         return SmartSelect.from(store, typeClass).list();
     }
 
     public List<T> findAllWithLimit(int limit) {
         return SmartSelect.from(store, typeClass)
+                .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .limit(String.valueOf(limit))
                 .list();
     }
 
     public List<T> findAllOrderByAsc(String fieldName) {
         return SmartSelect.from(store, typeClass)
+                .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .orderBy(fieldName)
                 .list();
     }
 
     public List<T> findAllOrderByDesc(String fieldName) {
+        return SmartSelect.from(store, typeClass)
+                .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
+                .orderByDesc(fieldName)
+                .list();
+    }
+
+    public List<T> findAllWithDeletedWithLimit(int limit) {
+        return SmartSelect.from(store, typeClass)
+                .limit(String.valueOf(limit))
+                .list();
+    }
+
+    public List<T> findAllWithDeletedOrderByAsc(String fieldName) {
+        return SmartSelect.from(store, typeClass)
+                .orderBy(fieldName)
+                .list();
+    }
+
+    public List<T> findAllWithDeletedOrderByDesc(String fieldName) {
         return SmartSelect.from(store, typeClass)
                 .orderByDesc(fieldName)
                 .list();
