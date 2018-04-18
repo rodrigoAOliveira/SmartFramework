@@ -120,6 +120,17 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
         JSONObject responseJson = getResponseJson(response);
         JSONArray records = getRecordsFromResponseJson(responseJson);
 
+        if(!response.isSuccess()) {
+            SyncDownError syncDownError = new SyncDownError();
+            syncDownError.setQuery(query);
+            syncDownError.setRequest(request);
+            syncDownError.setResponse(response);
+            syncDownError.setResponseJson(responseJson);
+            syncDownError.setRecords(records);
+
+            syncDownErrors.add(syncDownError);
+        }
+
         // Records total size.
         totalSize = responseJson.getInt(Constants.TOTAL_SIZE);
 

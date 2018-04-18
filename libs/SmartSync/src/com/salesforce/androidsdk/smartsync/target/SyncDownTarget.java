@@ -37,7 +37,9 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.SortedSet;
 
@@ -55,6 +57,7 @@ public abstract class SyncDownTarget extends SyncTarget {
     // Fields
 	protected QueryType queryType;
     protected int totalSize; // set during a fetch
+    protected List<SyncDownError> syncDownErrors;
 
     /**
 	 * Build SyncDownTarget from json
@@ -92,11 +95,13 @@ public abstract class SyncDownTarget extends SyncTarget {
      */
     public SyncDownTarget() {
         super();
+        syncDownErrors = new ArrayList<>();
     }
 
 
     public SyncDownTarget(String idFieldName, String modificationDateFieldName) {
         super(idFieldName, modificationDateFieldName);
+        syncDownErrors = new ArrayList<>();
     }
 
 
@@ -108,6 +113,7 @@ public abstract class SyncDownTarget extends SyncTarget {
     public SyncDownTarget(JSONObject target) throws JSONException {
         super(target);
         queryType = QueryType.valueOf(target.getString(QUERY_TYPE));
+        syncDownErrors = new ArrayList<>();
     }
 
     /**
@@ -288,5 +294,13 @@ public abstract class SyncDownTarget extends SyncTarget {
             }
         }
         return remoteIds;
+    }
+
+    public List<SyncDownError> getSyncDownErrors() {
+        return syncDownErrors;
+    }
+
+    public void setSyncDownErrors(List<SyncDownError> syncDownErrors) {
+        this.syncDownErrors = syncDownErrors;
     }
 }
