@@ -26,6 +26,8 @@
  */
 package com.salesforce.androidsdk.smartsync.target;
 
+import android.os.Environment;
+
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
@@ -37,10 +39,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -147,6 +154,70 @@ public class SyncUpTarget extends SyncTarget {
         return target;
     }
 
+
+    private enum Operations{
+        INSERT,
+        UPDATE,
+        DELETE
+    }
+
+    private void saveSyncUpErrorLog(Operations operation, String error, String sObject, Map<String, Object> fields) {
+
+        String _operation = "";
+        if(operation == Operations.INSERT) {
+            _operation = "INSERT";
+        } else if(operation == Operations.UPDATE) {
+            _operation = "UPDATE";
+        } else if(operation == Operations.DELETE) {
+            _operation = "DELETE";
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        String currentDateAndTime = sdf.format(new Date());
+
+        File directory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication");
+        File subDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication/ErrorLogs");
+
+        if(!directory.exists()) {
+            directory.mkdir();
+
+            if(!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        } else {
+            if(!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/SyncUpErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " - " + _operation + " - " + sObject + ": " + error + " - Request fields: " + fields);
+            log.write("\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/CurrentSyncUpErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " - " + _operation + " - " + sObject + ": " + error + " - Request fields: " + fields);
+            log.write("\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
     /**
      * Save locally created record back to server
      * @param syncManager
@@ -177,6 +248,10 @@ public class SyncUpTarget extends SyncTarget {
     protected String createOnServer(SyncManager syncManager, String objectType, Map<String, Object> fields) throws IOException, JSONException {
         RestRequest request = RestRequest.getRequestForCreate(syncManager.apiVersion, objectType, fields);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+
+        if(!response.isSuccess()) {
+            saveSyncUpErrorLog(Operations.INSERT, response.toString(), objectType, fields);
+        }
 
         return response.isSuccess()
                 ? response.asJSONObject().getString(Constants.LID)
@@ -210,6 +285,10 @@ public class SyncUpTarget extends SyncTarget {
     protected int deleteOnServer(SyncManager syncManager, String objectType, String objectId) throws IOException {
         RestRequest request = RestRequest.getRequestForDelete(syncManager.apiVersion, objectType, objectId);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+
+        if(!response.isSuccess()) {
+            saveSyncUpErrorLog(Operations.DELETE, response.toString(), objectType, null);
+        }
 
         return response.getStatusCode();
     }
@@ -245,6 +324,10 @@ public class SyncUpTarget extends SyncTarget {
     protected int updateOnServer(SyncManager syncManager, String objectType, String objectId, Map<String, Object> fields) throws IOException {
         RestRequest request = RestRequest.getRequestForUpdate(syncManager.apiVersion, objectType, objectId, fields);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+
+        if(!response.isSuccess()) {
+            saveSyncUpErrorLog(Operations.UPDATE, response.toString(), objectType, fields);
+        }
 
         return response.getStatusCode();
     }
