@@ -117,19 +117,18 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
     protected JSONArray startFetch(SyncManager syncManager, String query) throws IOException, JSONException {
         RestRequest request = RestRequest.getRequestForQuery(syncManager.apiVersion, query);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
-        JSONObject responseJson = getResponseJson(response);
-        JSONArray records = getRecordsFromResponseJson(responseJson);
 
         if(!response.isSuccess()) {
             SyncDownError syncDownError = new SyncDownError();
             syncDownError.setQuery(query);
             syncDownError.setRequest(request);
             syncDownError.setResponse(response);
-            syncDownError.setResponseJson(responseJson);
-            syncDownError.setRecords(records);
 
             syncDownErrors.add(syncDownError);
         }
+
+        JSONObject responseJson = getResponseJson(response);
+        JSONArray records = getRecordsFromResponseJson(responseJson);
 
         // Records total size.
         totalSize = responseJson.getInt(Constants.TOTAL_SIZE);
