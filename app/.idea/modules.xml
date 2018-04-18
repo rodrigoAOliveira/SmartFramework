@@ -2,6 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../ArcthosSmart/ArcthosSmart.iml" filepath="$PROJECT_DIR$/../ArcthosSmart/ArcthosSmart.iml" />
       <module fileurl="file://$PROJECT_DIR$/../libs/SalesforceAnalytics/SalesforceAnalytics.iml" filepath="$PROJECT_DIR$/../libs/SalesforceAnalytics/SalesforceAnalytics.iml" />
       <module fileurl="file://$PROJECT_DIR$/../libs/SalesforceSDK/SalesforceSDK.iml" filepath="$PROJECT_DIR$/../libs/SalesforceSDK/SalesforceSDK.iml" />
       <module fileurl="file://$PROJECT_DIR$/../SmartFramework.iml" filepath="$PROJECT_DIR$/../SmartFramework.iml" />
