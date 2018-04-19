@@ -179,12 +179,16 @@ public class SyncUpTarget extends SyncTarget {
     }
 
     private void addSyncUpError(Operations operation, RestRequest request, RestResponse response, String objectType, Map<String, Object> fields) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        String currentDateAndTime = sdf.format(new Date());
+
         SyncUpError syncUpError = new SyncUpError();
         syncUpError.setOperation(operation.getOperation());
         syncUpError.setRequest(request);
         syncUpError.setResponse(response);
         syncUpError.setObjectType(objectType);
         syncUpError.setFields(fields);
+        syncUpError.setDateTime(currentDateAndTime);
 
         syncUpErrors.add(syncUpError);
     }

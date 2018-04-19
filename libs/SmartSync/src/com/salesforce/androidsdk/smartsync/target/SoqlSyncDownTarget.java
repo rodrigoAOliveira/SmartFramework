@@ -171,10 +171,14 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if(!response.isSuccess()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            String currentDateAndTime = sdf.format(new Date());
+            
             SyncDownError syncDownError = new SyncDownError();
             syncDownError.setQuery(query);
             syncDownError.setRequest(request);
             syncDownError.setResponse(response);
+            syncDownError.setDateTime(currentDateAndTime);
 
             syncDownErrors.add(syncDownError);
 

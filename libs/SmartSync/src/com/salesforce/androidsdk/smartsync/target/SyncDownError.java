@@ -11,6 +11,7 @@ public class SyncDownError {
     private String query;
     private RestRequest request;
     private RestResponse response;
+    private String dateTime;
 
     public String getQuery() {
         return query;
@@ -34,5 +35,13 @@ public class SyncDownError {
 
     public void setResponse(RestResponse response) {
         this.response = response;
+    }
+
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
     }
 }

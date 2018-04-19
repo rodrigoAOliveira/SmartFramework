@@ -15,6 +15,7 @@ public class SyncUpError {
     private RestResponse response;
     private String objectType;
     private Map<String, Object> fields;
+    private String dateTime;
 
     public String getOperation() {
         return operation;
@@ -54,5 +55,13 @@ public class SyncUpError {
 
     public void setFields(Map<String, Object> fields) {
         this.fields = fields;
+    }
+
+    public String getDateTime() {
+        return dateTime;
+    }
+
+    public void setDateTime(String dateTime) {
+        this.dateTime = dateTime;
     }
 }
