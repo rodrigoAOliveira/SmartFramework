@@ -177,6 +177,8 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
             syncDownError.setResponse(response);
 
             syncDownErrors.add(syncDownError);
+
+            saveSyncDownErrorLog(query, request, response);
         }
 
         JSONObject responseJson = getResponseJson(response);

@@ -4,8 +4,6 @@
     <list default="true" id="db040df1-3fe2-4e36-9190-85720076d22c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncDownTarget.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncDownTarget.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -71,7 +69,7 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="SyncUpTarget.java" pinned="false" current-in-tab="false">
+      <file leaf-file-name="SyncUpTarget.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="557">
@@ -88,11 +86,11 @@
           </provider>
         </entry>
       </file>
-      <file leaf-file-name="SoqlSyncDownTarget.java" pinned="false" current-in-tab="true">
+      <file leaf-file-name="SoqlSyncDownTarget.java" pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="180">
-              <caret line="135" column="0" lean-forward="false" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
+            <state relative-caret-position="340">
+              <caret line="179" column="0" lean-forward="false" selection-start-line="179" selection-start-column="0" selection-end-line="179" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -7769,6 +7767,14 @@
         </state>
       </provider>
     </entry>
+    <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="340">
+          <caret line="179" column="0" lean-forward="false" selection-start-line="179" selection-start-column="0" selection-end-line="179" selection-end-column="0" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
     <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="557">
@@ -7781,14 +7787,6 @@
             <element signature="e#19032#19033#0" expanded="true" />
             <element signature="e#19067#19068#0" expanded="true" />
           </folding>
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="180">
-          <caret line="135" column="0" lean-forward="false" selection-start-line="135" selection-start-column="0" selection-end-line="135" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
