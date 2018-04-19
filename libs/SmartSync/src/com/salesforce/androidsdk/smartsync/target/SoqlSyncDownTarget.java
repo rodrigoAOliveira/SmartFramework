@@ -173,7 +173,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
         if(!response.isSuccess()) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
             String currentDateAndTime = sdf.format(new Date());
-            
+
             SyncDownError syncDownError = new SyncDownError();
             syncDownError.setQuery(query);
             syncDownError.setRequest(request);

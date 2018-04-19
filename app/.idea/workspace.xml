@@ -3,9 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="db040df1-3fe2-4e36-9190-85720076d22c" name="Default" comment="">
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncDownError.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncDownError.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpError.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpError.java" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java" afterPath="$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SyncUpTarget.java" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -110,7 +107,7 @@
         <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="260">
-              <caret line="175" column="12" lean-forward="true" selection-start-line="175" selection-start-column="12" selection-end-line="175" selection-end-column="12" />
+              <caret line="175" column="0" lean-forward="true" selection-start-line="175" selection-start-column="0" selection-end-line="175" selection-end-column="0" />
               <folding />
             </state>
           </provider>
@@ -7355,6 +7352,16 @@
               <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
             </PATH_ELEMENT>
             <PATH_ELEMENT>
+              <option name="myItemId" value="Gradle Scripts" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.android.AndroidBuildScriptsGroupNode" />
+            </PATH_ELEMENT>
+          </PATH>
+          <PATH>
+            <PATH_ELEMENT>
+              <option name="myItemId" value="SmartFramework" />
+              <option name="myItemType" value="com.android.tools.idea.navigator.nodes.AndroidViewProjectNode" />
+            </PATH_ELEMENT>
+            <PATH_ELEMENT>
               <option name="myItemId" value="SmartSync" />
               <option name="myItemType" value="com.android.tools.idea.navigator.nodes.android.AndroidModuleNode" />
             </PATH_ELEMENT>
@@ -7734,7 +7741,7 @@
       <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
       <window_info id="Captures" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle Console" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
-      <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
+      <window_info id="Project" active="true" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.2497332" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Gradle" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Fabric" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
@@ -7844,7 +7851,7 @@
     <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="260">
-          <caret line="175" column="12" lean-forward="true" selection-start-line="175" selection-start-column="12" selection-end-line="175" selection-end-column="12" />
+          <caret line="175" column="0" lean-forward="true" selection-start-line="175" selection-start-column="0" selection-end-line="175" selection-end-column="0" />
           <folding />
         </state>
       </provider>
