@@ -299,8 +299,4 @@ public abstract class SyncDownTarget extends SyncTarget {
     public List<SyncDownError> getSyncDownErrors() {
         return syncDownErrors;
     }
-
-    public void setSyncDownErrors(List<SyncDownError> syncDownErrors) {
-        this.syncDownErrors = syncDownErrors;
-    }
 }

@@ -27,6 +27,7 @@
 package com.salesforce.androidsdk.smartsync.target;
 
 import android.os.Environment;
+import android.util.Log;
 
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
@@ -178,7 +179,14 @@ public class SyncUpTarget extends SyncTarget {
     }
 
     private void addSyncUpError(Operations operation, RestRequest request, RestResponse response, String objectType, Map<String, Object> fields) {
+        SyncUpError syncUpError = new SyncUpError();
+        syncUpError.setOperation(operation.getOperation());
+        syncUpError.setRequest(request);
+        syncUpError.setResponse(response);
+        syncUpError.setObjectType(objectType);
+        syncUpError.setFields(fields);
 
+        syncUpErrors.add(syncUpError);
     }
 
     private void saveSyncUpErrorLog(Operations operation, String error, String sObject, Map<String, Object> fields) {
@@ -220,7 +228,7 @@ public class SyncUpTarget extends SyncTarget {
             log.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
         }
 
         try {
@@ -233,9 +241,8 @@ public class SyncUpTarget extends SyncTarget {
             log.close();
 
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
         }
-
     }
 
     /**
@@ -460,5 +467,9 @@ public class SyncUpTarget extends SyncTarget {
             this.timestamp = timestamp;
             this.isDeleted = isDeleted;
         }
+    }
+
+    public List<SyncUpError> getSyncUpErrors() {
+        return syncUpErrors;
     }
 }
