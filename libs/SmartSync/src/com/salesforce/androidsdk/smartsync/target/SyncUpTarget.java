@@ -46,6 +46,7 @@ import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
@@ -92,6 +93,8 @@ public class SyncUpTarget extends SyncTarget {
     protected List<String> createFieldlist;
     protected List<String> updateFieldlist;
 
+    protected List<SyncUpError> syncUpErrors;
+
     /**
      * Build SyncUpTarget from json
      *
@@ -121,6 +124,7 @@ public class SyncUpTarget extends SyncTarget {
      */
     public SyncUpTarget() {
         this(null, null);
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -130,6 +134,7 @@ public class SyncUpTarget extends SyncTarget {
         super();
         this.createFieldlist = createFieldlist;
         this.updateFieldlist = updateFieldlist;
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -141,6 +146,7 @@ public class SyncUpTarget extends SyncTarget {
         super(target);
         this.createFieldlist = JSONObjectHelper.toList(target.optJSONArray(CREATE_FIELDLIST));
         this.updateFieldlist = JSONObjectHelper.toList(target.optJSONArray(UPDATE_FIELDLIST));
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -156,9 +162,23 @@ public class SyncUpTarget extends SyncTarget {
 
 
     private enum Operations{
-        INSERT,
-        UPDATE,
-        DELETE
+        INSERT("INSERT"),
+        UPDATE("UPDATE"),
+        DELETE("DELETE");
+
+        final String operation;
+
+        Operations(String operation) {
+            this.operation = operation;
+        }
+
+        public String getOperation() {
+            return operation;
+        }
+    }
+
+    private void addSyncUpError(Operations operation, RestRequest request, RestResponse response, String objectType, Map<String, Object> fields) {
+
     }
 
     private void saveSyncUpErrorLog(Operations operation, String error, String sObject, Map<String, Object> fields) {
@@ -250,6 +270,7 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if(!response.isSuccess()) {
+            addSyncUpError(Operations.INSERT, request, response, objectType, fields);
             saveSyncUpErrorLog(Operations.INSERT, response.toString(), objectType, fields);
         }
 
@@ -287,6 +308,7 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if(!response.isSuccess()) {
+            addSyncUpError(Operations.DELETE, request, response, objectType, null);
             saveSyncUpErrorLog(Operations.DELETE, response.toString(), objectType, null);
         }
 
@@ -326,6 +348,7 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if(!response.isSuccess()) {
+            addSyncUpError(Operations.UPDATE, request, response, objectType, fields);
             saveSyncUpErrorLog(Operations.UPDATE, response.toString(), objectType, fields);
         }
 
