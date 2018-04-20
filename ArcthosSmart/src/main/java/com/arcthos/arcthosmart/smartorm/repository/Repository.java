@@ -8,7 +8,8 @@ import com.arcthos.arcthosmart.smartorm.GeneralConstants;
 import com.arcthos.arcthosmart.smartorm.SmartObject;
 import com.arcthos.arcthosmart.smartorm.SmartObjectConstants;
 import com.arcthos.arcthosmart.smartorm.SmartSelect;
-import com.google.gson.Gson;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.SerializationFeature;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.util.Constants;
@@ -17,6 +18,8 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
+import java.io.StringWriter;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,18 +39,21 @@ public abstract class Repository<T extends SmartObject> {
         getSoup();
     }
 
-    public T create(T model) throws JSONException {
-        Gson gson = new Gson();
-        String serializedModel = gson.toJson(model);
+    public T create(T model) throws JSONException, IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        StringWriter stringWriter = new StringWriter();
+        objectMapper.writeValue(stringWriter, model);
+        String serializedModel = objectMapper.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
         JSONObject response = store.create(soup, json);
-        return gson.fromJson(response.toString(), typeClass);
+        return objectMapper.readValue(response.toString(), typeClass);
 
     }
 
-    public List<T> createAll(List<T> models) throws JSONException {
+    public List<T> createAll(List<T> models) throws JSONException, IOException {
         List<T> responses = new ArrayList<>();
 
         if (models == null) {
@@ -65,21 +71,24 @@ public abstract class Repository<T extends SmartObject> {
         return responses;
     }
 
-    public T update(T model) throws JSONException, RegisterNotCreatedException {
+    public T update(T model) throws JSONException, RegisterNotCreatedException, IOException {
         if(model.getSoupEntryId() == -1) {
             throw new RegisterNotCreatedException("You can't update an register that was not created yet.");
         }
 
-        Gson gson = new Gson();
-        String serializedModel = gson.toJson(model);
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        StringWriter stringWriter = new StringWriter();
+        objectMapper.writeValue(stringWriter, model);
+        String serializedModel = objectMapper.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
         JSONObject response = store.update(soup, json, model.getSoupEntryId());
-        return gson.fromJson(response.toString(), typeClass);
+        return objectMapper.readValue(response.toString(), typeClass);
     }
 
-    public List<T> updateAll(List<T> models) throws JSONException, RegisterNotCreatedException {
+    public List<T> updateAll(List<T> models) throws JSONException, RegisterNotCreatedException, IOException {
         List<T> responses = new ArrayList<>();
 
         if (models == null) {
@@ -97,18 +106,21 @@ public abstract class Repository<T extends SmartObject> {
         return responses;
     }
 
-    public T upsert(T model) throws JSONException {
-        Gson gson = new Gson();
-        String serializedModel = gson.toJson(model);
+    public T upsert(T model) throws JSONException, IOException {
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
+        StringWriter stringWriter = new StringWriter();
+        objectMapper.writeValue(stringWriter, model);
+        String serializedModel = objectMapper.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
         JSONObject response = store.upsert(soup, json);
-        return gson.fromJson(response.toString(), typeClass);
+        return objectMapper.readValue(response.toString(), typeClass);
 
     }
 
-    public List<T> upsertAll(List<T> models) throws JSONException {
+    public List<T> upsertAll(List<T> models) throws JSONException, IOException {
         List<T> responses = new ArrayList<>();
 
         if (models == null) {
