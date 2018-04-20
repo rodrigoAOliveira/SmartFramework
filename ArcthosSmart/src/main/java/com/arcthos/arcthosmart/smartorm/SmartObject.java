@@ -5,8 +5,8 @@ import android.util.Log;
 import com.arcthos.arcthosmart.annotations.Ignore;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.Sync;
-import com.google.gson.annotations.Expose;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonView;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -18,7 +18,7 @@ import java.util.UUID;
 
 public abstract class SmartObject implements Serializable, Cloneable {
     @Sync(up = false)
-    @SerializedName(SmartObjectConstants.ID)
+    @JsonProperty(SmartObjectConstants.ID)
     protected String id;
 
     @Ignore
@@ -26,29 +26,28 @@ public abstract class SmartObject implements Serializable, Cloneable {
     protected Attributes attributes;
 
     @Sync(up = false)
-    @SerializedName(SmartObjectConstants.LAST_MODIFIED_DATE)
+    @JsonProperty(SmartObjectConstants.LAST_MODIFIED_DATE)
     protected String lastModifiedDate;
 
     @Sync(up = false, down = false)
-    @SerializedName(SmartObjectConstants.LOCALLY_CREATE)
+    @JsonProperty(SmartObjectConstants.LOCALLY_CREATE)
     protected boolean locallyCreated;
 
     @Sync(up = false, down = false)
-    @SerializedName(SmartObjectConstants.LOCALLY_UPDATED)
+    @JsonProperty(SmartObjectConstants.LOCALLY_UPDATED)
     protected boolean locallyUpdated;
 
     @Sync(up = false, down = false)
-    @SerializedName(SmartObjectConstants.LOCALLY_DELETED)
+    @JsonProperty(SmartObjectConstants.LOCALLY_DELETED)
     protected boolean locallyDeleted;
 
     @Sync(up = false, down = false)
-    @SerializedName(SmartObjectConstants.LOCAL)
+    @JsonProperty(SmartObjectConstants.LOCAL)
     protected boolean local;
 
     @Ignore
     @Sync(up = false, down = false)
-    @Expose(serialize = false)
-    @SerializedName(SmartObjectConstants.SOUP_ENTRY_ID)
+    @JsonProperty(SmartObjectConstants.SOUP_ENTRY_ID)
     protected long soupEntryId;
 
     public SmartObject(Class<?> extendedClass) {

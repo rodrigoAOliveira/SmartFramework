@@ -1,6 +1,6 @@
 package com.arcthos.arcthosmart.smartintegration.helpers;
 
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by Vinicius Damiati on 16-Oct-17.
@@ -9,13 +9,13 @@ import com.google.gson.annotations.SerializedName;
 public class RefreshToken {
     private String id;
 
-    @SerializedName("access_token")
+    @JsonProperty("access_token")
     private String accessToken;
 
-    @SerializedName("instance_url")
+    @JsonProperty("instance_url")
     private String instanceUrl;
 
-    @SerializedName("issued_at")
+    @JsonProperty("issued_at")
     private String issuedAt;
 
     private String signature;

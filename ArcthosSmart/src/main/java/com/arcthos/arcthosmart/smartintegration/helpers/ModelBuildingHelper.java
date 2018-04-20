@@ -8,7 +8,7 @@ import com.arcthos.arcthosmart.annotations.SoqlWhere;
 import com.arcthos.arcthosmart.annotations.Sync;
 import com.arcthos.arcthosmart.smartorm.SObjectAnnotationNotFoundException;
 import com.arcthos.arcthosmart.smartorm.SmartObject;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 
@@ -72,10 +72,10 @@ public class ModelBuildingHelper<T> {
 
             String fieldName = "";
 
-            if(field.isAnnotationPresent(SerializedName.class)) {
+            if(field.isAnnotationPresent(JsonProperty.class)) {
                 for(Annotation annotation : field.getAnnotations()) {
-                    if(annotation instanceof SerializedName){
-                        fieldName = ((SerializedName)annotation).value();
+                    if(annotation instanceof JsonProperty){
+                        fieldName = ((JsonProperty)annotation).value();
                         break;
                     }
                 }
@@ -120,10 +120,10 @@ public class ModelBuildingHelper<T> {
 
             String fieldName = "";
 
-            if(field.isAnnotationPresent(SerializedName.class)) {
+            if(field.isAnnotationPresent(JsonProperty.class)) {
                 for(Annotation annotation : field.getAnnotations()) {
-                    if(annotation instanceof SerializedName){
-                        fieldName = ((SerializedName)annotation).value();
+                    if(annotation instanceof JsonProperty){
+                        fieldName = ((JsonProperty)annotation).value();
                         break;
                     }
                 }

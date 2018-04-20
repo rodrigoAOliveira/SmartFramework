@@ -12,7 +12,7 @@ import com.arcthos.arcthosmart.smartorm.SmartObject;
 import com.arcthos.arcthosmart.smartorm.SmartObjectConstants;
 import com.arcthos.arcthosmart.smartorm.SmartSelect;
 import com.arcthos.arcthosmart.smartorm.repository.Repository;
-import com.google.gson.annotations.SerializedName;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
@@ -291,8 +291,8 @@ public class SObjectSyncher<T extends SmartObject>{
                         destinationClass = ((DestinationLocalParent)annotation).value();
                     }
 
-                    if(annotation instanceof SerializedName){
-                        fieldName = ((SerializedName)annotation).value();
+                    if(annotation instanceof JsonProperty){
+                        fieldName = ((JsonProperty)annotation).value();
                     }
                 }
 

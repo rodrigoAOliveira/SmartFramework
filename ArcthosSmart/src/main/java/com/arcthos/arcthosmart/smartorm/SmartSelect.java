@@ -3,7 +3,9 @@ package com.arcthos.arcthosmart.smartorm;
 import android.util.Log;
 
 import com.arcthos.arcthosmart.annotations.SObject;
-import com.google.gson.Gson;
+import com.fasterxml.jackson.core.JsonParseException;
+import com.fasterxml.jackson.databind.JsonMappingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 
@@ -11,6 +13,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Iterator;
@@ -182,17 +185,26 @@ public class SmartSelect<T> implements Iterable {
         try {
             JSONArray results = smartStore.query(querySpec, 0);
 
-            Gson gson = new Gson();
+            ObjectMapper objectMapper = new ObjectMapper();
             List<T> models = new ArrayList<>();
 
             for (int i = 0; i < results.length(); i++) {
-                T model = gson.fromJson(results.getJSONArray(i).getJSONObject(0).toString(), record);
+                T model = objectMapper.readValue(results.getJSONArray(i).getJSONObject(0).toString(), record);
                 models.add(model);
             }
 
             return models;
 
         } catch (JSONException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return new ArrayList<>();
+        } catch (JsonParseException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return new ArrayList<>();
+        } catch (JsonMappingException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return new ArrayList<>();
+        } catch (IOException e) {
             Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
             return new ArrayList<>();
         }
@@ -248,11 +260,11 @@ public class SmartSelect<T> implements Iterable {
         try {
             JSONArray results = smartStore.query(querySpec, 0);
 
-            Gson gson = new Gson();
+            ObjectMapper objectMapper = new ObjectMapper();
             List<T> models = new ArrayList<>();
 
             for (int i = 0; i < results.length(); i++) {
-                T model = gson.fromJson(results.getJSONArray(i).getJSONObject(0).toString(), record);
+                T model = objectMapper.readValue(results.getJSONArray(i).getJSONObject(0).toString(), record);
                 models.add(model);
             }
 
@@ -262,6 +274,15 @@ public class SmartSelect<T> implements Iterable {
             Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
             return null;
         } catch (NullPointerException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return null;
+        } catch (JsonParseException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return null;
+        } catch (JsonMappingException e) {
+            Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
+            return null;
+        } catch (IOException e) {
             Log.e(SmartSelect.class.getSimpleName(), e.getMessage(), e);
             return null;
         }
