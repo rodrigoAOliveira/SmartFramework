@@ -5,8 +5,8 @@ import android.util.Log;
 import com.arcthos.arcthosmart.annotations.Ignore;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.Sync;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonView;
 
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
@@ -15,7 +15,7 @@ import java.util.UUID;
 /**
  * Created by Vinicius Damiati on 05-Oct-17.
  */
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public abstract class SmartObject implements Serializable, Cloneable {
     @Sync(up = false)
     @JsonProperty(SmartObjectConstants.ID)

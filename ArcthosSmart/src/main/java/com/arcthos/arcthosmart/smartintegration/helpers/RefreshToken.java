@@ -1,11 +1,12 @@
 package com.arcthos.arcthosmart.smartintegration.helpers;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 /**
  * Created by Vinicius Damiati on 16-Oct-17.
  */
-
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RefreshToken {
     private String id;
 
