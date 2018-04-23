@@ -44,7 +44,7 @@ public abstract class Repository<T extends SmartObject> {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         StringWriter stringWriter = new StringWriter();
         objectMapper.writeValue(stringWriter, model);
-        String serializedModel = objectMapper.toString();
+        String serializedModel = stringWriter.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
@@ -80,7 +80,7 @@ public abstract class Repository<T extends SmartObject> {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         StringWriter stringWriter = new StringWriter();
         objectMapper.writeValue(stringWriter, model);
-        String serializedModel = objectMapper.toString();
+        String serializedModel = stringWriter.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
@@ -111,7 +111,7 @@ public abstract class Repository<T extends SmartObject> {
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
         StringWriter stringWriter = new StringWriter();
         objectMapper.writeValue(stringWriter, model);
-        String serializedModel = objectMapper.toString();
+        String serializedModel = stringWriter.toString();
 
         JSONObject json = new JSONObject(serializedModel);
 
