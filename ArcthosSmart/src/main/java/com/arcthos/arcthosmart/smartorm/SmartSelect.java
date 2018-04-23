@@ -184,14 +184,14 @@ public class SmartSelect<T> implements Iterable {
 
         try {
             JSONArray results = smartStore.query(querySpec, 0);
-
-            ObjectMapper objectMapper = new ObjectMapper();
-            List<T> models = new ArrayList<>();
+            JSONArray tmpResults = new JSONArray();
 
             for (int i = 0; i < results.length(); i++) {
-                T model = objectMapper.readValue(results.getJSONArray(i).getJSONObject(0).toString(), record);
-                models.add(model);
+                tmpResults.put(results.getJSONArray(i).getJSONObject(0));
             }
+
+            ObjectMapper objectMapper = new ObjectMapper();
+            List<T> models = objectMapper.readValue(tmpResults.toString(), objectMapper.getTypeFactory().constructCollectionType(List.class, record));
 
             return models;
 
