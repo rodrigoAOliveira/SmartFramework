@@ -227,7 +227,7 @@ public class SyncUpTarget extends SyncTarget {
                     .getExternalStorageDirectory().getPath()
                     + "/SalesforceApplication/ErrorLogs/SyncUpErrorLog.txt", true));
 
-            log.write(currentDateAndTime + " - " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
+            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
             log.write("\r\n\r\n");
             log.close();
 
@@ -240,7 +240,7 @@ public class SyncUpTarget extends SyncTarget {
                     .getExternalStorageDirectory().getPath()
                     + "/SalesforceApplication/ErrorLogs/CurrentSyncUpErrorLog.txt", true));
 
-            log.write(currentDateAndTime + " - " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
+            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
             log.write("\r\n\r\n");
             log.close();
 
