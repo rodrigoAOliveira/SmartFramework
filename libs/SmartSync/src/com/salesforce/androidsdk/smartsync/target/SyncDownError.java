@@ -12,6 +12,7 @@ public class SyncDownError {
     private RestRequest request;
     private RestResponse response;
     private String dateTime;
+    private String customErrorMessage;
 
     public String getQuery() {
         return query;
@@ -43,5 +44,13 @@ public class SyncDownError {
 
     public void setDateTime(String dateTime) {
         this.dateTime = dateTime;
+    }
+
+    public String getCustomErrorMessage() {
+        return customErrorMessage;
+    }
+
+    public void setCustomErrorMessage(String customErrorMessage) {
+        this.customErrorMessage = customErrorMessage;
     }
 }
