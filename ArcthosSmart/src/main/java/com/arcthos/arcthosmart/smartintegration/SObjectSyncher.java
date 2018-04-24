@@ -162,6 +162,9 @@ public class SObjectSyncher<T extends SmartObject>{
                                 syncDown(chainedCallback);
                             } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
                                 syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
+                            } else if (SyncState.Status.FAILED.equals(sync.getStatus()) && doSyncdownAfter) {
+                                syncCallback.onUpFailure(sync, finalObject);
+                                syncDown(chainedCallback);
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
                                 syncCallback.onUpFailure(sync, finalObject);
                             }

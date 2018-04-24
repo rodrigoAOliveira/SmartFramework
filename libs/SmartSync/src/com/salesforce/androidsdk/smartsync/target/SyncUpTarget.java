@@ -258,7 +258,7 @@ public class SyncUpTarget extends SyncTarget {
      * @throws JSONException
      * @throws IOException
      */
-    public String createOnServer(SyncManager syncManager, JSONObject record, List<String> fieldlist) throws JSONException, IOException {
+    public String createOnServer(SyncManager syncManager, JSONObject record, List<String> fieldlist) throws JSONException, IOException, SyncUpException {
         fieldlist = this.createFieldlist != null ? this.createFieldlist : fieldlist;
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
         final Map<String,Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
@@ -276,7 +276,7 @@ public class SyncUpTarget extends SyncTarget {
      * @throws IOException
      * @throws JSONException
      */
-    protected String createOnServer(SyncManager syncManager, String objectType, Map<String, Object> fields) throws IOException, JSONException {
+    protected String createOnServer(SyncManager syncManager, String objectType, Map<String, Object> fields) throws IOException, JSONException, SyncUpException {
         RestRequest request = RestRequest.getRequestForCreate(syncManager.apiVersion, objectType, fields);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
@@ -285,9 +285,13 @@ public class SyncUpTarget extends SyncTarget {
             saveSyncUpErrorLog(Operations.INSERT, response.toString(), objectType, fields);
         }
 
-        return response.isSuccess()
-                ? response.asJSONObject().getString(Constants.LID)
-                : null;
+        if(response.isSuccess()) {
+            response.asJSONObject().getString(Constants.LID);
+        } else {
+            throw new SyncUpException("Failure to sync up object: " + objectType + ". Error caused by: " + response.toString());
+        }
+
+        return null;
     }
 
     /**

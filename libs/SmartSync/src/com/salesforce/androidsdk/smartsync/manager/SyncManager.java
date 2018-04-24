@@ -40,7 +40,9 @@ import com.salesforce.androidsdk.smartstore.store.SmartStore.SmartStoreException
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.smartsync.target.AdvancedSyncUpTarget;
 import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
+import com.salesforce.androidsdk.smartsync.target.SyncUpException;
 import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
+import com.salesforce.androidsdk.smartsync.util.Constants;
 import com.salesforce.androidsdk.smartsync.util.SmartSyncLogger;
 import com.salesforce.androidsdk.smartsync.util.SyncOptions;
 import com.salesforce.androidsdk.smartsync.util.SyncState;
@@ -396,7 +398,7 @@ public class SyncManager {
 	}
 
     private void syncUpOneRecord(SyncUpTarget target, String soupName,
-                                 JSONObject record, SyncOptions options) throws JSONException, IOException {
+                                 JSONObject record, SyncOptions options) throws JSONException, IOException, SyncUpException {
         SmartSyncLogger.d(TAG, "syncUpOneRecord called", record);
 
         /*
@@ -438,6 +440,7 @@ public class SyncManager {
             return;
         }
 
+
         // Create/update/delete record on server and update smartstore
         String recordServerId;
         int statusCode;
@@ -455,6 +458,8 @@ public class SyncManager {
                         : target.deleteOnServer(this, record));
                 if (RestResponse.isSuccess(statusCode) || statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
                     target.deleteFromLocalStore(this, soupName, record);
+                } else {
+                    throw new SyncUpException("Failure to sync up object on delete operation.");
                 }
                 break;
             case update:
@@ -474,6 +479,8 @@ public class SyncManager {
                     else {
                         // Leave local record alone
                     }
+                } else {
+                    throw new SyncUpException("Failure to sync up object: " + soupName);
                 }
                 break;
         }
