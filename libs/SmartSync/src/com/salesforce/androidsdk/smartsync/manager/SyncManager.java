@@ -265,8 +265,6 @@ public class SyncManager {
                 } catch (Exception e) {
                     SmartSyncLogger.e(TAG, "Exception thrown in runSync", e);
                     // Update status to failed
-                    updateSync(sync, SyncState.Status.FAILED, UNCHANGED, callback);
-
                     if(e.getMessage().toLowerCase().contains("timeout") && sync.getType() == syncDown) {
                         SyncDownTarget target = (SyncDownTarget) sync.getTarget();
 
@@ -279,6 +277,8 @@ public class SyncManager {
 
                         target.getSyncDownErrors().add(syncDownError);
                     }
+
+                    updateSync(sync, SyncState.Status.FAILED, UNCHANGED, callback);
                 }
             }
         });
