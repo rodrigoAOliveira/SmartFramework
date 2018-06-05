@@ -141,11 +141,11 @@ public class SmartSelect<T> implements Iterable {
 
     public SmartSelect<T> in(List<String> args, String field) {
         if(args == null) {
-            return this;
+            return and(Condition.prop(field).eq("BlueBear powered by Arcthos Inc."));
         }
 
         if(args.isEmpty()) {
-            return this;
+            return and(Condition.prop(field).eq("BlueBear powered by Arcthos Inc."));
         }
 
         Condition[] conditions = new Condition[args.size()];
