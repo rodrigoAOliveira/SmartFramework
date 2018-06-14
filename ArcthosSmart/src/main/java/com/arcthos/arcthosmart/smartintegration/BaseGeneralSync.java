@@ -63,18 +63,17 @@ public abstract class BaseGeneralSync {
     }
 
     public synchronized void performSync() {
-        String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
-        formattedLastUpdate = formatLastUpdate(lastUpdate);
-
-        syncObjects();
         new AsyncTask<Void, Void, Void>() {
             @Override
             protected Void doInBackground(Void... voids) {
+                String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
+                formattedLastUpdate = formatLastUpdate(lastUpdate);
+                syncObjects();
                 syncChainedObjects();
+                setLastDateUpdate();
                 return null;
             }
         }.executeOnExecutor(THREAD_POOL_EXECUTOR);
-        setLastDateUpdate();
     }
 
     protected abstract void syncObjects();
@@ -93,7 +92,11 @@ public abstract class BaseGeneralSync {
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
-        new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+        if(sObjectSyncher.hasSoup()) {
+            sObjectSyncher.syncUpAndDown();
+        } else {
+            sObjectSyncher.syncDown(null);
+        }
     }
 
     protected void syncChainedObjects(final List<Class<? extends SmartObject>> models) {
