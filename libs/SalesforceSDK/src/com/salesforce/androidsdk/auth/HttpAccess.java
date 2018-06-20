@@ -54,7 +54,7 @@ public class HttpAccess {
 
     // Timeouts.
     public static final int CONNECT_TIMEOUT = 60;
-    public static final int READ_TIMEOUT = 20;
+    public static final int READ_TIMEOUT = 60;
 
     // User agent header name.
 	private static final String USER_AGENT = "User-Agent";
