@@ -5,8 +5,6 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="db040df1-3fe2-4e36-9190-85720076d22c" name="Default" comment="">
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../build.gradle" afterPath="$PROJECT_DIR$/../build.gradle" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/../libs/SalesforceSDK/src/com/salesforce/androidsdk/auth/HttpAccess.java" afterPath="$PROJECT_DIR$/../libs/SalesforceSDK/src/com/salesforce/androidsdk/auth/HttpAccess.java" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
@@ -67,7 +65,7 @@
         <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="160">
-              <caret line="170" column="60" lean-forward="true" selection-start-line="170" selection-start-column="60" selection-end-line="170" selection-end-column="60" />
+              <caret line="170" column="60" lean-forward="false" selection-start-line="170" selection-start-column="60" selection-end-line="170" selection-end-column="60" />
               <folding>
                 <element signature="e#9421#9429#0" expanded="true" />
               </folding>
@@ -101,8 +99,8 @@
       <file leaf-file-name="HttpAccess.java" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/../libs/SalesforceSDK/src/com/salesforce/androidsdk/auth/HttpAccess.java">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="700">
-              <caret line="78" column="0" lean-forward="true" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
+            <state relative-caret-position="240">
+              <caret line="55" column="49" lean-forward="false" selection-start-line="55" selection-start-column="49" selection-end-line="55" selection-end-column="49" />
               <folding />
             </state>
           </provider>
@@ -112,7 +110,7 @@
         <entry file="file://$PROJECT_DIR$/../ArcthosSmart/src/main/java/com/arcthos/arcthosmart/smartorm/SmartSelect.java">
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="577">
-              <caret line="155" column="9" lean-forward="true" selection-start-line="155" selection-start-column="9" selection-end-line="155" selection-end-column="9" />
+              <caret line="155" column="9" lean-forward="false" selection-start-line="155" selection-start-column="9" selection-end-line="155" selection-end-column="9" />
               <folding />
             </state>
           </provider>
@@ -7588,7 +7586,7 @@
       <option name="ACTIVITY_CLASS" value="" />
       <method>
         <option name="Android.Gradle.BeforeRunTask" enabled="true" />
-        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1529507360212" />
+        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1529507510897" />
       </method>
     </configuration>
     <configuration default="true" type="AndroidTestRunConfigurationType" factoryName="Android Instrumented Tests">
@@ -7636,7 +7634,7 @@
       </Profilers>
       <method>
         <option name="Android.Gradle.BeforeRunTask" enabled="true" />
-        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1529507360212" />
+        <option name="com.android.instantApps.provision.BeforeRunTask" enabled="true" clearCache="false" clearProvisionedDevices="false" myTimestamp="1529507510897" />
       </method>
     </configuration>
     <configuration default="true" type="Application" factoryName="Application">
@@ -8187,7 +8185,7 @@
     <entry file="file://$PROJECT_DIR$/../ArcthosSmart/src/main/java/com/arcthos/arcthosmart/smartorm/SmartSelect.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="577">
-          <caret line="155" column="9" lean-forward="true" selection-start-line="155" selection-start-column="9" selection-end-line="155" selection-end-column="9" />
+          <caret line="155" column="9" lean-forward="false" selection-start-line="155" selection-start-column="9" selection-end-line="155" selection-end-column="9" />
           <folding />
         </state>
       </provider>
@@ -8203,7 +8201,7 @@
     <entry file="file://$PROJECT_DIR$/../libs/SmartSync/src/com/salesforce/androidsdk/smartsync/target/SoqlSyncDownTarget.java">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="160">
-          <caret line="170" column="60" lean-forward="true" selection-start-line="170" selection-start-column="60" selection-end-line="170" selection-end-column="60" />
+          <caret line="170" column="60" lean-forward="false" selection-start-line="170" selection-start-column="60" selection-end-line="170" selection-end-column="60" />
           <folding>
             <element signature="e#9421#9429#0" expanded="true" />
           </folding>
@@ -8231,8 +8229,8 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/../libs/SalesforceSDK/src/com/salesforce/androidsdk/auth/HttpAccess.java">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="700">
-          <caret line="78" column="0" lean-forward="true" selection-start-line="78" selection-start-column="0" selection-end-line="78" selection-end-column="0" />
+        <state relative-caret-position="240">
+          <caret line="55" column="49" lean-forward="false" selection-start-line="55" selection-start-column="49" selection-end-line="55" selection-end-column="49" />
           <folding />
         </state>
       </provider>

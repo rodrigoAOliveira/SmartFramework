@@ -53,7 +53,7 @@ import okhttp3.TlsVersion;
 public class HttpAccess {
 
     // Timeouts.
-    public static final int CONNECT_TIMEOUT = 60;
+    public static final int CONNECT_TIMEOUT = 100;
     public static final int READ_TIMEOUT = 60;
 
     // User agent header name.
