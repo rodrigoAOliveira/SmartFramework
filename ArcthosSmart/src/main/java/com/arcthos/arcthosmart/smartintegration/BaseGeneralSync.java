@@ -104,7 +104,21 @@ public abstract class BaseGeneralSync {
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
+    protected void syncUnitaryObject(Class<? extends SmartObject> model) {
+        String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
+        formattedLastUpdate = formatLastUpdate(lastUpdate);
+
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
+        sObjectSyncher.setWhere(where);
+
+        new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+    }
+
     protected void syncDownObject(Class<? extends SmartObject> model) {
+        String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
+        formattedLastUpdate = formatLastUpdate(lastUpdate);
+
         SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
