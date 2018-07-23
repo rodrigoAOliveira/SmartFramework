@@ -16,6 +16,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.Enumeration;
 import java.util.List;
@@ -55,6 +56,13 @@ public abstract class BaseGeneralSync {
         Date lastUpdateDate;
         try {
             lastUpdateDate = sdf.parse(lastUpdate);
+
+            Calendar cal = Calendar.getInstance();
+            cal.setTime(lastUpdateDate);
+            cal.add(Calendar.MINUTE, -2);
+
+            lastUpdateDate = cal.getTime();
+
         } catch (ParseException e) {
             lastUpdateDate = new Date(0);
         }
