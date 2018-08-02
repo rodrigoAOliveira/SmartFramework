@@ -91,7 +91,7 @@ public class SmartSelect<T> implements Iterable {
                         .append("} ")
                         .append(condition.getCheckSymbol())
                         .append("'")
-                        .append(condition.getValue().toString())
+                        .append(condition.getValue().toString().replace("'", "''"))
                         .append("'");
             } else if (Condition.Check.IS_NULL.equals(condition.getCheck()) ||
                     Condition.Check.IS_NOT_NULL.equals(condition.getCheck())) {
@@ -111,7 +111,7 @@ public class SmartSelect<T> implements Iterable {
                         .append("} ")
                         .append(condition.getCheckSymbol())
                         .append("'")
-                        .append(condition.getValue().toString())
+                        .append(condition.getValue().toString().replace("'", "''"))
                         .append("'");
                 args.add(condition.getValue());
             }
