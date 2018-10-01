@@ -104,6 +104,23 @@ public abstract class BaseGeneralSync {
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
+    protected void syncFullObject(Class<? extends SmartObject> model) {
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        String where = getCustomWhere(model);
+
+        if (where.startsWith("AND ")) {
+            where = where.substring(3, where.length());
+        }
+
+        if (where.startsWith("OR ")) {
+            where = where.substring(2, where.length());
+        }
+
+        sObjectSyncher.setWhere(where);
+
+        new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+    }
+
     protected void syncUnitaryObject(Class<? extends SmartObject> model) {
         String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);
@@ -127,8 +144,8 @@ public abstract class BaseGeneralSync {
     }
 
     protected void syncChainedObjects(final List<Class<? extends SmartObject>> models) {
-        if(models == null) return;
-        if(models.isEmpty()) return;
+        if (models == null) return;
+        if (models.isEmpty()) return;
 
         final Class<? extends SmartObject> model = models.get(0);
 
@@ -136,13 +153,13 @@ public abstract class BaseGeneralSync {
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
-        if(sObjectSyncher.hasSoup()) {
+        if (sObjectSyncher.hasSoup()) {
             sObjectSyncher.chainedSyncUpAndDown(new ChainedCallback() {
                 @Override
                 public void onFinish() {
                     List<Class<? extends SmartObject>> newModels = new ArrayList<>();
-                    if(models.size() > 1) {
-                        for(int i = 1; i < models.size(); i++) {
+                    if (models.size() > 1) {
+                        for (int i = 1; i < models.size(); i++) {
                             newModels.add(models.get(i));
                         }
                     }
@@ -152,8 +169,8 @@ public abstract class BaseGeneralSync {
         } else {
             sObjectSyncher.syncDown(null);
             List<Class<? extends SmartObject>> newModels = new ArrayList<>();
-            if(models.size() > 1) {
-                for(int i = 1; i < models.size(); i++) {
+            if (models.size() > 1) {
+                for (int i = 1; i < models.size(); i++) {
                     newModels.add(models.get(i));
                 }
             }
@@ -165,8 +182,8 @@ public abstract class BaseGeneralSync {
         String where = "";
 
         List<Field> fields = Arrays.asList(model.getDeclaredFields());
-        for(Field field : fields) {
-            if(field.isAnnotationPresent(SoqlWhere.class)) {
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(SoqlWhere.class)) {
                 //TODO: validate if starts with an AND or OR than put or not the AND word
                 where = invoke(field.getName(), model);
             }
@@ -203,7 +220,7 @@ public abstract class BaseGeneralSync {
                 Class clazz = null;
                 try {
                     clazz = context.getClassLoader().loadClass(classCanonicalName);
-                    if(clazz.isAnnotationPresent(SObject.class)) {
+                    if (clazz.isAnnotationPresent(SObject.class)) {
                         sObjectsAmount++;
                     }
                 } catch (ClassNotFoundException e) {
