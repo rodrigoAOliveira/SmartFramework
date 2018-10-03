@@ -82,14 +82,14 @@ public abstract class BaseGeneralSync {
                 return null;
             }
         }.executeOnExecutor(THREAD_POOL_EXECUTOR);
-        setLastDateUpdate();
+        //setLastDateUpdate();
     }
 
     protected abstract void syncObjects();
 
     protected abstract void syncChainedObjects();
 
-    private void setLastDateUpdate() {
+    public void setLastDateUpdate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
