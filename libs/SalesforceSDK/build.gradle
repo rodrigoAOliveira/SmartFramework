@@ -17,11 +17,12 @@ dependencies {
   compile project(':libs:SalesforceAnalytics')
   compile 'com.squareup.okhttp3:okhttp:3.6.0'
   compile 'com.google.android.gms:play-services-gcm:10.2.0'
+  compile 'com.android.support:appcompat-v7:26.1.0'
 }
 
 android {
-  compileSdkVersion 25
-  buildToolsVersion '25.0.0'
+  compileSdkVersion 26
+  buildToolsVersion '26.0.0'
 
   buildTypes {
       debug {

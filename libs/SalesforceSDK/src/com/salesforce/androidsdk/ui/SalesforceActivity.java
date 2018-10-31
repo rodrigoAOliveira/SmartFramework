@@ -29,6 +29,7 @@ package com.salesforce.androidsdk.ui;
 import android.app.Activity;
 import android.content.IntentFilter;
 import android.os.Bundle;
+import android.support.v7.app.AppCompatActivity;
 
 import com.salesforce.androidsdk.accounts.UserAccountManager;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
@@ -45,7 +46,7 @@ import com.salesforce.androidsdk.util.UserSwitchReceiver;
 /**
  * Abstract base class for all Salesforce activities.
  */
-public abstract class SalesforceActivity extends Activity {
+public abstract class SalesforceActivity extends AppCompatActivity {
 
 	private PasscodeManager passcodeManager;
     private UserSwitchReceiver userSwitchReceiver;
