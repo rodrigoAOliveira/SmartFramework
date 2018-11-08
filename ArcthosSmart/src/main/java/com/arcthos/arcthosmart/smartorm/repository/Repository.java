@@ -39,6 +39,10 @@ public abstract class Repository<T extends SmartObject> {
         getSoup();
     }
 
+    protected SmartSelect<T> getSmartSelect() {
+        return SmartSelect.from(this.store, typeClass);
+    }
+
     public T create(T model) throws JSONException, IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         objectMapper.configure(SerializationFeature.INDENT_OUTPUT, true);
@@ -178,7 +182,7 @@ public abstract class Repository<T extends SmartObject> {
             return null;
         }
 
-        T model = SmartSelect.from(store, typeClass)
+        T model = getSmartSelect()
                 .where(Condition.prop(Constants.ID).eq(id),
                         Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .first();
@@ -191,7 +195,7 @@ public abstract class Repository<T extends SmartObject> {
             return null;
         }
 
-        T model = SmartSelect.from(store, typeClass)
+        T model = getSmartSelect()
                 .where(Condition.prop(Constants.ID).eq(id))
                 .first();
 
@@ -199,7 +203,7 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public T findByEntryId(long entryId) {
-        T model = SmartSelect.from(store, typeClass)
+        T model = getSmartSelect()
                 .where(Condition.prop(SmartObjectConstants.SOUP_ENTRY_ID).eq(entryId))
                 .first();
 
@@ -207,50 +211,50 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public List<T> findAll() {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .list();
     }
 
     public List<T> findAllWithDeleteds() {
-        return SmartSelect.from(store, typeClass).list();
+        return getSmartSelect().list();
     }
 
     public List<T> findAllWithLimit(int limit) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .limit(String.valueOf(limit))
                 .list();
     }
 
     public List<T> findAllOrderByAsc(String fieldName) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .orderBy(fieldName)
                 .list();
     }
 
     public List<T> findAllOrderByDesc(String fieldName) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .where(Condition.prop(GeneralConstants.IS_DELETED).eq("false"))
                 .orderByDesc(fieldName)
                 .list();
     }
 
     public List<T> findAllWithDeletedWithLimit(int limit) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .limit(String.valueOf(limit))
                 .list();
     }
 
     public List<T> findAllWithDeletedOrderByAsc(String fieldName) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .orderBy(fieldName)
                 .list();
     }
 
     public List<T> findAllWithDeletedOrderByDesc(String fieldName) {
-        return SmartSelect.from(store, typeClass)
+        return getSmartSelect()
                 .orderByDesc(fieldName)
                 .list();
     }
