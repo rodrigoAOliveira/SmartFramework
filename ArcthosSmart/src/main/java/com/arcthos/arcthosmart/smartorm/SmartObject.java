@@ -73,6 +73,27 @@ public abstract class SmartObject implements Serializable, Cloneable {
         }
     }
 
+    public void prepareCreate() {
+        this.local = true;
+        this.locallyCreated = true;
+        this.locallyUpdated = false;
+        this.locallyDeleted = false;
+    }
+
+    public void prepareUpdate() {
+        this.local = true;
+        this.locallyCreated = false;
+        this.locallyUpdated = true;
+        this.locallyDeleted = false;
+    }
+
+    public void prepareDelete() {
+        this.local = true;
+        this.locallyCreated = false;
+        this.locallyUpdated = false;
+        this.locallyDeleted = true;
+    }
+
     public String getId() {
         return id;
     }
