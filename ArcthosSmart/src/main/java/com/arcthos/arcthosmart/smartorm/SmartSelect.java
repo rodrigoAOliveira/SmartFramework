@@ -117,8 +117,6 @@ public class SmartSelect<T> implements Iterable {
             }
         }
 
-        toAppend.append(type.getClosingSymbol());
-
         if (!"".equals(whereClause)) {
             whereClause += " " + type.getName() + " " + type.getOpeningSymbol();
         }
