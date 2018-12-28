@@ -78,7 +78,7 @@ public class SmartSelect<T> implements Iterable {
         StringBuilder toAppend = new StringBuilder();
         for (Condition condition : conditions) {
             if (toAppend.length() != 0) {
-                toAppend.append(" ").append(type.getName()).append(type.getOpeningSymbol()).append(" ");
+                toAppend.append(" ").append(type.getName()).append(" ");
             }
 
             if (Condition.Check.LIKE.equals(condition.getCheck()) ||
@@ -120,10 +120,10 @@ public class SmartSelect<T> implements Iterable {
         toAppend.append(type.getClosingSymbol());
 
         if (!"".equals(whereClause)) {
-            whereClause += " " + type.getName() + " ";
+            whereClause += " " + type.getName() + " " + type.getOpeningSymbol();
         }
 
-        whereClause += "(" + toAppend + ")";
+        whereClause += "(" + toAppend + ")" + type.getClosingSymbol();
     }
 
     public SmartSelect<T> whereOr(Condition... args) {
