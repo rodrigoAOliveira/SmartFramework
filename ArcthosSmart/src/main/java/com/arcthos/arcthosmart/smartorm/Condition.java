@@ -162,9 +162,37 @@ public class Condition {
         }
     }
 
-    enum Type {
-        AND,
-        OR,
-        NOT
+    public enum Type {
+        AND("AND", "", ""),
+        OR("OR", "", ""),
+        NOT("NOT", "", ""),
+        AND_OPENING_PARENTHESES("AND", "(", ""),
+        AND_CLOSING_PARENTHESES("AND", "", ")"),
+        OR_OPENING_PARENTHESES("OR", "(", ""),
+        OR_CLOSING_PARENTHESES("OR", "", ")"),
+        NOT_OPENING_PARENTHESES("NOT", "(", ""),
+        NOT_CLOSING_PARENTHESES("NOT", "", ")");
+
+        private final String name;
+        private final String openingSymbol;
+        private final String closingSymbol;
+
+        Type(final String name, final String openingSymbol, final String closingSymbol) {
+            this.name = name;
+            this.openingSymbol = openingSymbol;
+            this.closingSymbol = closingSymbol;
+        }
+
+        public String getName() {
+            return name;
+        }
+
+        public String getOpeningSymbol() {
+            return openingSymbol;
+        }
+
+        public String getClosingSymbol() {
+            return closingSymbol;
+        }
     }
 }

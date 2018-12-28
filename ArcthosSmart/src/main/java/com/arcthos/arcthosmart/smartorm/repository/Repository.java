@@ -259,6 +259,12 @@ public abstract class Repository<T extends SmartObject> {
                 .list();
     }
 
+    public List<T> findByIds(List<String> ids) {
+        return getSmartSelect()
+                .in(ids, SmartObjectConstants.ID)
+                .list();
+    }
+
     public int countLocalRegisters() {
         if (!store.hasSoup(soup)) {
             return 0;

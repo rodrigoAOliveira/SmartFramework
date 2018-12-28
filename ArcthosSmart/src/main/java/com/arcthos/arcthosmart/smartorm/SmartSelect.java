@@ -75,10 +75,10 @@ public class SmartSelect<T> implements Iterable {
     }
 
     private void mergeConditions(Condition[] conditions, Condition.Type type) {
-        StringBuilder toAppend = new StringBuilder("");
+        StringBuilder toAppend = new StringBuilder();
         for (Condition condition : conditions) {
             if (toAppend.length() != 0) {
-                toAppend.append(" ").append(type.name()).append(" ");
+                toAppend.append(" ").append(type.getName()).append(type.getOpeningSymbol()).append(" ");
             }
 
             if (Condition.Check.LIKE.equals(condition.getCheck()) ||
@@ -117,8 +117,10 @@ public class SmartSelect<T> implements Iterable {
             }
         }
 
+        toAppend.append(type.getClosingSymbol());
+
         if (!"".equals(whereClause)) {
-            whereClause += " " + type.name() + " ";
+            whereClause += " " + type.getName() + " ";
         }
 
         whereClause += "(" + toAppend + ")";
@@ -134,8 +136,28 @@ public class SmartSelect<T> implements Iterable {
         return this;
     }
 
+    public SmartSelect<T> andOpeningParentheses(Condition... args) {
+        mergeConditions(args, Condition.Type.AND_OPENING_PARENTHESES);
+        return this;
+    }
+
+    public SmartSelect<T> andClosingParentheses(Condition... args) {
+        mergeConditions(args, Condition.Type.AND_CLOSING_PARENTHESES);
+        return this;
+    }
+
     public SmartSelect<T> or(Condition... args) {
         mergeConditions(args, Condition.Type.OR);
+        return this;
+    }
+
+    public SmartSelect<T> orOpeningParentheses(Condition... args) {
+        mergeConditions(args, Condition.Type.OR_OPENING_PARENTHESES);
+        return this;
+    }
+
+    public SmartSelect<T> orClosingParentheses(Condition... args) {
+        mergeConditions(args, Condition.Type.OR_CLOSING_PARENTHESES);
         return this;
     }
 
