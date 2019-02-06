@@ -178,6 +178,18 @@ public class SmartSelect<T> implements Iterable {
         return or(conditions);
     }
 
+    public SmartSelect<T> notIn(List<String> args, String field) {
+        if (args == null || args.isEmpty()) return this;
+        Condition[] conditions = new Condition[args.size()];
+
+        for (int i = 0; i < args.size(); ++i) {
+            Condition condition = Condition.prop(field).notEq(args.get(i));
+            conditions[i] = condition;
+        }
+
+        return this.and(conditions);
+    }
+
     public SmartSelect<T> where(String whereClause, String[] args) {
         this.whereClause = whereClause;
         this.arguments = args;

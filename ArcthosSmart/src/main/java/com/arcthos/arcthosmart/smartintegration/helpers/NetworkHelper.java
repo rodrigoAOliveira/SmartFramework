@@ -12,6 +12,8 @@ import com.salesforce.androidsdk.app.SalesforceSDKManager;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 
+import java.io.File;
+
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -35,7 +37,7 @@ public class NetworkHelper {
     }
 
     public static void validateToken(Context context, UserAccount user, final TokenCallback tokenCallback) {
-        if(!isConnected(context)) {
+        if (!isConnected(context)) {
             tokenCallback.noConnection();
             return;
         }
@@ -50,7 +52,7 @@ public class NetworkHelper {
         call.enqueue(new Callback<RefreshToken>() {
             @Override
             public void onResponse(Call<RefreshToken> call, Response<RefreshToken> response) {
-                if(response.isSuccessful()) {
+                if (response.isSuccessful()) {
                     tokenCallback.onSuccess(response.body());
                 } else {
                     tokenCallback.onFailure(response.errorBody());
@@ -75,6 +77,22 @@ public class NetworkHelper {
         SmartStore smartStore = SmartSyncSDKManager.getInstance().getSmartStore(user);
         smartStore.dropAllSoups();
         SalesforceSDKManager.getInstance().logout(activity);
+        deleteDbFiles(activity);
         System.exit(0);
+    }
+
+    private static void deleteDbFiles(Activity activity) {
+        File file = new File(activity.getFilesDir().getAbsolutePath().substring(0, activity.getFilesDir().getAbsolutePath().length() - 6) + "/databases");
+        if (file.exists()) {
+            deleteRecursive(file);
+        }
+    }
+
+    private static void deleteRecursive(File fileOrDirectory) {
+        if (fileOrDirectory.isDirectory())
+            for (File child : fileOrDirectory.listFiles())
+                deleteRecursive(child);
+
+        fileOrDirectory.delete();
     }
 }
