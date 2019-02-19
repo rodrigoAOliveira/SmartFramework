@@ -224,7 +224,7 @@ public class SObjectSyncher<T extends SmartObject>{
         }
     }
 
-    private void updateChainedObject() throws JSONException {
+    public void updateChainedObject() throws JSONException {
         JSONArray models = SmartSelect.from(smartStore, type).where(Condition.prop(SmartObjectConstants.LOCAL).eq(true)).rawList();
         Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName = new HashMap<>();
         Map<String, String> destinationBySource = getDestinationBySource(sourceClassBySourceFieldName);
