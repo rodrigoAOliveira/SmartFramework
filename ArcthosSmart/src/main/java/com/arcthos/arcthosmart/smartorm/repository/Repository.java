@@ -290,6 +290,12 @@ public abstract class Repository<T extends SmartObject> {
         return result;
     }
 
+    public List<T> findByLocal() {
+        return getSmartSelect()
+                .where(Condition.prop(SmartObjectConstants.LOCAL).eq(true))
+                .list();
+    }
+
     private void getSoup() {
         if(!typeClass.isAnnotationPresent(SObject.class)) {
             Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + typeClass.getSimpleName());
