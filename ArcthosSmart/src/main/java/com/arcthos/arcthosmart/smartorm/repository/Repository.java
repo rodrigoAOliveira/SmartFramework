@@ -303,9 +303,7 @@ public abstract class Repository<T extends SmartObject> {
                 .concat(soup)
                 .concat(":")
                 .concat(field)
-                .concat("})")
-                .concat(" from ")
-                .concat("{")
+                .concat("}) from {")
                 .concat(soup)
                 .concat("}");
 
