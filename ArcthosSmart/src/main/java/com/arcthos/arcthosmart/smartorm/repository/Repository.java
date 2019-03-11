@@ -64,11 +64,11 @@ public abstract class Repository<T extends SmartObject> {
             return responses;
         }
 
-        if(models.isEmpty()) {
+        if (models.isEmpty()) {
             return responses;
         }
 
-        for(T model : models) {
+        for (T model : models) {
             responses.add(create(model));
         }
 
@@ -76,7 +76,7 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public T update(T model) throws JSONException, RegisterNotCreatedException, IOException {
-        if(model.getSoupEntryId() == -1) {
+        if (model.getSoupEntryId() == -1) {
             throw new RegisterNotCreatedException("You can't update an register that was not created yet.");
         }
 
@@ -99,11 +99,11 @@ public abstract class Repository<T extends SmartObject> {
             return responses;
         }
 
-        if(models.isEmpty()) {
+        if (models.isEmpty()) {
             return responses;
         }
 
-        for(T model : models) {
+        for (T model : models) {
             responses.add(update(model));
         }
 
@@ -131,11 +131,11 @@ public abstract class Repository<T extends SmartObject> {
             return responses;
         }
 
-        if(models.isEmpty()) {
+        if (models.isEmpty()) {
             return responses;
         }
 
-        for(T model : models) {
+        for (T model : models) {
             responses.add(upsert(model));
         }
 
@@ -143,7 +143,7 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public boolean delete(T model) {
-        if(model.getSoupEntryId() == -1) {
+        if (model.getSoupEntryId() == -1) {
             return false;
         }
 
@@ -156,20 +156,20 @@ public abstract class Repository<T extends SmartObject> {
             return false;
         }
 
-        if(models.isEmpty()) {
+        if (models.isEmpty()) {
             return false;
         }
 
         List<T> validModels = new ArrayList<>();
-        for(T model : models) {
-            if(model.getSoupEntryId() == -1) {
+        for (T model : models) {
+            if (model.getSoupEntryId() == -1) {
                 continue;
             }
             validModels.add(model);
         }
 
         Long[] soupEntryIds = new Long[validModels.size()];
-        for(int i = 0; i < validModels.size(); i++) {
+        for (int i = 0; i < validModels.size(); i++) {
             soupEntryIds[i] = validModels.get(i).getSoupEntryId();
         }
 
@@ -178,7 +178,7 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public T find(String id) {
-        if(id == null) {
+        if (id == null) {
             return null;
         }
 
@@ -191,7 +191,7 @@ public abstract class Repository<T extends SmartObject> {
     }
 
     public T findWithDeleteds(String id) {
-        if(id == null) {
+        if (id == null) {
             return null;
         }
 
@@ -296,16 +296,40 @@ public abstract class Repository<T extends SmartObject> {
                 .list();
     }
 
+    public List<String> findDistinctByField(String field) throws JSONException {
+        List<String> distinct = new ArrayList<>();
+
+        String query = "Select Distinct({"
+                .concat(soup)
+                .concat(":")
+                .concat(field)
+                .concat("})")
+                .concat(" from ")
+                .concat("{")
+                .concat(soup)
+                .concat("}");
+
+        QuerySpec querySpec = QuerySpec.buildSmartQuerySpec(query, 50000);
+
+        JSONArray results = store.query(querySpec, 0);
+
+        for (int i = 0; i < results.length(); i++) {
+            distinct.add(results.getJSONArray(i).getString(0));
+        }
+
+        return distinct;
+    }
+
     private void getSoup() {
-        if(!typeClass.isAnnotationPresent(SObject.class)) {
+        if (!typeClass.isAnnotationPresent(SObject.class)) {
             Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + typeClass.getSimpleName());
             this.soup = "";
             return;
         }
 
-        for(Annotation annotation : typeClass.getAnnotations()) {
-            if(annotation instanceof SObject){
-                this.soup = ((SObject)annotation).value();
+        for (Annotation annotation : typeClass.getAnnotations()) {
+            if (annotation instanceof SObject) {
+                this.soup = ((SObject) annotation).value();
             }
         }
     }
