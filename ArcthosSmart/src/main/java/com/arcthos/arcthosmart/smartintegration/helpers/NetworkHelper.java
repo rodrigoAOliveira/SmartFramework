@@ -8,6 +8,7 @@ import android.net.NetworkInfo;
 import com.arcthos.arcthosmart.smartintegration.BaseGeneralSync;
 import com.arcthos.arcthosmart.smartintegration.PreferencesManager;
 import com.salesforce.androidsdk.accounts.UserAccount;
+import com.salesforce.androidsdk.analytics.SalesforceAnalyticsManager;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
@@ -47,7 +48,7 @@ public class NetworkHelper {
                 .addConverterFactory(JacksonConverterFactory.create()).build();
 
         RefreshTokenService refreshTokenService = retrofit.create(RefreshTokenService.class);
-        Call<RefreshToken> call = refreshTokenService.getRefreshToken("refresh_token", user.getClientId(), user.getRefreshToken());
+        Call<RefreshToken> call = refreshTokenService.getRefreshToken("refresh_token", SalesforceAnalyticsManager.getDeviceAppAttributes().getClientId(), user.getRefreshToken());
 
         call.enqueue(new Callback<RefreshToken>() {
             @Override

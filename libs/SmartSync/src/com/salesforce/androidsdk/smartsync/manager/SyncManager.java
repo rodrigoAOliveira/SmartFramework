@@ -39,7 +39,6 @@ import com.salesforce.androidsdk.smartstore.store.SmartStore.SmartStoreException
 import com.salesforce.androidsdk.smartsync.app.Features;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.smartsync.target.AdvancedSyncUpTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncDownError;
 import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
 import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
 import com.salesforce.androidsdk.smartsync.util.SmartSyncLogger;
@@ -54,8 +53,6 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -363,17 +360,6 @@ public class SyncManager {
                     SmartSyncLogger.e(TAG, "Exception thrown in runSync", re);
                     // Do not do anything - let the logout go through!
                 } catch (Exception e) {
-                    SyncDownTarget target = (SyncDownTarget) sync.getTarget();
-
-                    SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-                    String currentDateAndTime = sdf.format(new Date());
-
-                    SyncDownError syncDownError = new SyncDownError();
-                    syncDownError.setCustomErrorMessage("Timeout");
-                    syncDownError.setDateTime(currentDateAndTime);
-
-                    target.getSyncDownErrors().add(syncDownError);
-
                     SmartSyncLogger.e(TAG, "Exception thrown in runSync", e);
 
                     //Set error message to sync state

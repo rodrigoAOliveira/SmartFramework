@@ -26,62 +26,62 @@
  */
 package com.salesforce.androidsdk.ui;
 
+import android.app.Activity;
 import android.os.Bundle;
-import android.support.v7.app.AppCompatActivity;
 import android.view.KeyEvent;
 
 /**
  * Abstract base class for all Salesforce activities.
  */
-public abstract class SalesforceActivity extends AppCompatActivity implements SalesforceActivityInterface {
+public abstract class SalesforceActivity extends Activity implements SalesforceActivityInterface {
 
-    private final SalesforceActivityDelegate delegate;
+	private final SalesforceActivityDelegate delegate;
 
-    public SalesforceActivity() {
-        super();
-        this.delegate = new SalesforceActivityDelegate(this);
-    }
+	public SalesforceActivity() {
+		super();
+		this.delegate = new SalesforceActivityDelegate(this);
+	}
 
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        delegate.onCreate();
-    }
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		delegate.onCreate();
+	}
 
-    @Override
-    public void onResume() {
-        super.onResume();
-        delegate.onResume(true);
-    }
+	@Override 
+	public void onResume() {
+		super.onResume();
+		delegate.onResume(true);
+	}
 
-    @Override
-    public void onUserInteraction() {
-        delegate.onUserInteraction();
-    }
+	@Override
+	public void onUserInteraction() {
+		delegate.onUserInteraction();
+	}
 
     @Override
     public void onPause() {
         super.onPause();
-        delegate.onPause();
+		delegate.onPause();
     }
 
     @Override
     public void onDestroy() {
-        delegate.onDestroy();
-        super.onDestroy();
+		delegate.onDestroy();
+    	super.onDestroy();
     }
 
     @Override
-    public boolean onKeyUp(int keyCode, KeyEvent event) {
-        return delegate.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
-    }
+	public boolean onKeyUp(int keyCode, KeyEvent event) {
+		return delegate.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
+	}
 
     @Override
     public void onLogoutComplete() {
     }
 
-    @Override
-    public void onUserSwitched() {
-        delegate.onResume(true);
-    }
+	@Override
+	public void onUserSwitched() {
+		delegate.onResume(true);
+	}
 }

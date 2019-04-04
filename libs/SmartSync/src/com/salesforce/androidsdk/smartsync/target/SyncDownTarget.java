@@ -38,9 +38,7 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.SortedSet;
@@ -54,76 +52,63 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     // Constants
     private static final String TAG = "SyncDownTarget";
-    public static final String QUERY_TYPE = "type";
+	public static final String QUERY_TYPE = "type";
 
     // Fields
-    protected QueryType queryType;
+	protected QueryType queryType;
     protected int totalSize; // set during a fetch
-    protected List<SyncDownError> syncDownErrors;
 
     /**
-     * Build SyncDownTarget from json
-     *
-     * @param target as json
-     * @return
-     * @throws JSONException
-     */
-    @SuppressWarnings("unchecked")
-    public static SyncDownTarget fromJSON(JSONObject target) throws JSONException {
-        if (target == null) {
+	 * Build SyncDownTarget from json
+	 * @param target as json
+	 * @return
+	 * @throws JSONException
+	 */
+	@SuppressWarnings("unchecked")
+	public static SyncDownTarget fromJSON(JSONObject target) throws JSONException {
+		if (target == null) {
             return null;
         }
-        final QueryType queryType = QueryType.valueOf(target.getString(QUERY_TYPE));
+		final QueryType queryType = QueryType.valueOf(target.getString(QUERY_TYPE));
         switch (queryType) {
-            case mru:
-                return new MruSyncDownTarget(target);
-            case sosl:
-                return new SoslSyncDownTarget(target);
-            case soql:
-                return new SoqlSyncDownTarget(target);
-            case refresh:
-                return new RefreshSyncDownTarget(target);
-            case parent_children:
-                return new ParentChildrenSyncDownTarget(target);
-            case metadata:
-                return new MetadataSyncDownTarget(target);
-            case layout:
-                return new LayoutSyncDownTarget(target);
-            case custom:
-            default:
-                try {
-                    Class<? extends SyncDownTarget> implClass = (Class<? extends SyncDownTarget>) Class.forName(target.getString(ANDROID_IMPL));
-                    Constructor<? extends SyncDownTarget> constructor = implClass.getConstructor(JSONObject.class);
-                    return constructor.newInstance(target);
-                } catch (Exception e) {
-                    throw new RuntimeException(e);
-                }
+        case mru: return new MruSyncDownTarget(target);
+        case sosl: return new SoslSyncDownTarget(target);
+        case soql: return new SoqlSyncDownTarget(target);
+        case refresh: return new RefreshSyncDownTarget(target);
+        case parent_children: return new ParentChildrenSyncDownTarget(target);
+        case metadata: return new MetadataSyncDownTarget(target);
+        case layout: return new LayoutSyncDownTarget(target);
+        case custom:
+        default:
+            try {
+                Class<? extends SyncDownTarget> implClass = (Class<? extends SyncDownTarget>) Class.forName(target.getString(ANDROID_IMPL));
+                Constructor<? extends SyncDownTarget> constructor = implClass.getConstructor(JSONObject.class);
+                return constructor.newInstance(target);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         }
-    }
+	}
 
     /**
      * Construct SyncDownTarget
      */
     public SyncDownTarget() {
         super();
-        syncDownErrors = new ArrayList<>();
     }
 
     public SyncDownTarget(String idFieldName, String modificationDateFieldName) {
         super(idFieldName, modificationDateFieldName);
-        syncDownErrors = new ArrayList<>();
     }
 
     /**
      * Construct SyncDownTarget from json
-     *
      * @param target
      * @throws JSONException
      */
     public SyncDownTarget(JSONObject target) throws JSONException {
         super(target);
         queryType = QueryType.valueOf(target.getString(QUERY_TYPE));
-        syncDownErrors = new ArrayList<>();
     }
 
     /**
@@ -139,7 +124,6 @@ public abstract class SyncDownTarget extends SyncTarget {
     /**
      * Start fetching records conforming to target
      * If a value for maxTimeStamp greater than 0 is passed in, only records created/modified after maxTimeStamp should be returned
-     *
      * @param syncManager
      * @param maxTimeStamp
      * @throws IOException, JSONException
@@ -148,7 +132,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Continue fetching records conforming to target if any
-     *
      * @param syncManager
      * @return null if there are no more records to fetch
      * @throws IOException, JSONException
@@ -157,7 +140,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Delete from local store records that a full sync down would no longer download
-     *
      * @param syncManager
      * @param soupName
      * @param syncId
@@ -170,8 +152,8 @@ public abstract class SyncDownTarget extends SyncTarget {
         final Set<String> localIds = getNonDirtyRecordIds(syncManager, soupName, getIdFieldName(),
                 buildSyncIdPredicateIfIndexed(syncManager, soupName, syncId));
 
-        // Fetches list of IDs still present on the server from the list of local IDs
-        // and removes the list of IDs that are still present on the server.
+         // Fetches list of IDs still present on the server from the list of local IDs
+         // and removes the list of IDs that are still present on the server.
         final Set<String> remoteIds = getRemoteIds(syncManager, localIds);
         if (remoteIds != null) {
             localIds.removeAll(remoteIds);
@@ -187,7 +169,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Return predicate to target records with this sync id if there is an index on __sync_id__
-     *
      * @param syncManager
      * @param soupName
      * @param syncId
@@ -196,7 +177,7 @@ public abstract class SyncDownTarget extends SyncTarget {
     protected String buildSyncIdPredicateIfIndexed(SyncManager syncManager, String soupName, long syncId) {
         String additionalPredicate = "";
         IndexSpec[] indexSpecs = syncManager.getSmartStore().getSoupIndexSpecs(soupName);
-        for (IndexSpec indexSpec : indexSpecs) {
+        for(IndexSpec indexSpec : indexSpecs) {
             if (indexSpec.path.equals(SYNC_ID)) {
                 additionalPredicate = String.format(Locale.US, "AND {%s:%s} = %d", soupName, SYNC_ID, syncId);
                 break;
@@ -207,7 +188,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Return ids of non-dirty records (records NOT locally created/updated or deleted)
-     *
      * @param syncManager
      * @param soupName
      * @param idField
@@ -223,7 +203,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Return SmartSQL to identify non-dirty records
-     *
      * @param soupName
      * @param idField
      * @param additionalPredicate
@@ -258,7 +237,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Gets the latest modification timestamp from the array of records.
-     *
      * @param records
      * @return latest modification time stamp
      * @throws JSONException
@@ -269,7 +247,6 @@ public abstract class SyncDownTarget extends SyncTarget {
 
     /**
      * Gets the latest modification timestamp from the array of records.
-     *
      * @param records
      * @param modifiedDateFieldName
      * @return
@@ -298,8 +275,7 @@ public abstract class SyncDownTarget extends SyncTarget {
     /**
      * Return ids of records that should not be written over
      * during a sync down with merge mode leave-if-changed
-     *
-     * @return set of ids
+     * @return set of ids 
      * @throws JSONException
      */
     public Set<String> getIdsToSkip(SyncManager syncManager, String soupName) throws JSONException {
@@ -310,9 +286,9 @@ public abstract class SyncDownTarget extends SyncTarget {
      * Enum for query type.
      */
     public enum QueryType {
-        mru,
-        sosl,
-        soql,
+    	mru,
+    	sosl,
+    	soql,
         refresh,
         parent_children,
         custom,
@@ -337,9 +313,5 @@ public abstract class SyncDownTarget extends SyncTarget {
             }
         }
         return remoteIds;
-    }
-
-    public List<SyncDownError> getSyncDownErrors() {
-        return syncDownErrors;
     }
 }
