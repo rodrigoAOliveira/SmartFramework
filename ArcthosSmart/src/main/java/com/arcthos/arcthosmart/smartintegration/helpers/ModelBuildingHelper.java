@@ -3,6 +3,7 @@ package com.arcthos.arcthosmart.smartintegration.helpers;
 import android.util.Log;
 
 import com.arcthos.arcthosmart.annotations.Ignore;
+import com.arcthos.arcthosmart.annotations.LookUp;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.SoqlWhere;
 import com.arcthos.arcthosmart.annotations.Sync;
@@ -30,7 +31,7 @@ public class ModelBuildingHelper<T> {
     }
 
     public String getSObjectName() {
-        if(!modelClass.isAnnotationPresent(SObject.class)) {
+        if (!modelClass.isAnnotationPresent(SObject.class)) {
             try {
                 throw new SObjectAnnotationNotFoundException("SObject annotation missing in model class: " + modelClass.getSimpleName());
             } catch (SObjectAnnotationNotFoundException e) {
@@ -39,9 +40,9 @@ public class ModelBuildingHelper<T> {
             }
         }
 
-        for(Annotation annotation : modelClass.getAnnotations()) {
-            if(annotation instanceof SObject){
-                return ((SObject)annotation).value();
+        for (Annotation annotation : modelClass.getAnnotations()) {
+            if (annotation instanceof SObject) {
+                return ((SObject) annotation).value();
             }
         }
 
@@ -61,21 +62,21 @@ public class ModelBuildingHelper<T> {
     }
 
     private void getIndexSpecsByCollection(List<IndexSpec> indexSpecs, List<Field> fields) {
-        for(Field field : fields) {
-            if(field.isAnnotationPresent(Ignore.class)) {
+        for (Field field : fields) {
+            if (field.isAnnotationPresent(Ignore.class)) {
                 continue;
             }
 
-            if(field.isAnnotationPresent(SoqlWhere.class)) {
+            if (field.isAnnotationPresent(SoqlWhere.class)) {
                 continue;
             }
 
             String fieldName = "";
 
-            if(field.isAnnotationPresent(JsonProperty.class)) {
-                for(Annotation annotation : field.getAnnotations()) {
-                    if(annotation instanceof JsonProperty){
-                        fieldName = ((JsonProperty)annotation).value();
+            if (field.isAnnotationPresent(JsonProperty.class)) {
+                for (Annotation annotation : field.getAnnotations()) {
+                    if (annotation instanceof JsonProperty) {
+                        fieldName = ((JsonProperty) annotation).value();
                         break;
                     }
                 }
@@ -109,21 +110,25 @@ public class ModelBuildingHelper<T> {
     }
 
     private void getFieldsToSyncByCollection(List<String> fieldsToSync, List<Field> fields, boolean syncDown) {
-        for(Field field : fields) {
+        for (Field field : fields) {
             if (field.isAnnotationPresent(Ignore.class)) {
                 continue;
             }
 
-            if(field.isAnnotationPresent(SoqlWhere.class)) {
+            if (field.isAnnotationPresent(SoqlWhere.class)) {
+                continue;
+            }
+
+            if (field.isAnnotationPresent(LookUp.class) && !syncDown) {
                 continue;
             }
 
             String fieldName = "";
 
-            if(field.isAnnotationPresent(JsonProperty.class)) {
-                for(Annotation annotation : field.getAnnotations()) {
-                    if(annotation instanceof JsonProperty){
-                        fieldName = ((JsonProperty)annotation).value();
+            if (field.isAnnotationPresent(JsonProperty.class)) {
+                for (Annotation annotation : field.getAnnotations()) {
+                    if (annotation instanceof JsonProperty) {
+                        fieldName = ((JsonProperty) annotation).value();
                         break;
                     }
                 }
@@ -131,24 +136,53 @@ public class ModelBuildingHelper<T> {
                 fieldName = field.getName();
             }
 
-            if(!field.isAnnotationPresent(Sync.class)) {
+            if (field.isAnnotationPresent(LookUp.class)) {
+                fieldsToSync.addAll(processLookUp(field, fieldName));
+                continue;
+            }
+
+            if (!field.isAnnotationPresent(Sync.class)) {
                 fieldsToSync.add(fieldName);
                 continue;
             }
 
-            for(Annotation annotation : field.getAnnotations()) {
-                if(annotation instanceof Sync){
-                    if(syncDown) {
-                        if(((Sync)annotation).down()) {
+            for (Annotation annotation : field.getAnnotations()) {
+                if (annotation instanceof Sync) {
+                    if (syncDown) {
+                        if (((Sync) annotation).down()) {
                             fieldsToSync.add(fieldName);
                         }
                     } else {
-                        if(((Sync)annotation).up()) {
+                        if (((Sync) annotation).up()) {
                             fieldsToSync.add(fieldName);
                         }
                     }
                 }
             }
         }
+    }
+
+    private List<String> processLookUp(Field field, String fieldName) {
+        Class<? extends SmartObject> lookUpFor = null;
+
+        for (Annotation annotation : field.getAnnotations()) {
+            if (annotation instanceof LookUp) {
+                lookUpFor = ((LookUp) annotation).value();
+                break;
+            }
+        }
+
+        if (lookUpFor == null) return new ArrayList<>();
+
+        ModelBuildingHelper modelBuildingHelper = new ModelBuildingHelper(lookUpFor);
+        List<String> relatedFields = modelBuildingHelper.getFieldsToSyncDown();
+
+        List<String> concatenedRelatedFields = new ArrayList<>();
+
+        for (String relatedField : relatedFields) {
+            concatenedRelatedFields.add(fieldName.concat(".").concat(relatedField));
+        }
+
+        return concatenedRelatedFields;
     }
 }
