@@ -32,9 +32,8 @@ import android.content.SharedPreferences.Editor;
 import android.content.res.XmlResourceParser;
 import android.text.TextUtils;
 
-import com.salesforce.androidsdk.app.SalesforceSDKManager;
+import com.salesforce.androidsdk.R;
 import com.salesforce.androidsdk.config.RuntimeConfig.ConfigKey;
-import com.salesforce.androidsdk.ui.SalesforceR;
 import com.salesforce.androidsdk.util.SalesforceSDKLogger;
 
 import org.xmlpull.v1.XmlPullParserException;
@@ -42,6 +41,7 @@ import org.xmlpull.v1.XmlPullParserException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 /**
@@ -56,9 +56,6 @@ public class LoginServerManager {
 	// Default login servers.
     public static final String PRODUCTION_LOGIN_URL = "https://login.salesforce.com";
     public static final String SANDBOX_LOGIN_URL = "https://test.salesforce.com";
-
-	// Legacy keys for login servers properties stored in preferences.
-	public static final String LEGACY_SERVER_URL_PREFS_SETTINGS = "server_url_prefs";
 
 	// Keys used in shared preferences.
 	private static final String SERVER_URL_FILE = "server_url_file";
@@ -124,8 +121,7 @@ public class LoginServerManager {
 
         // Selection has been saved before.
         if (name != null && url != null) {
-            final LoginServer server = new LoginServer(name, url, isCustom);
-            selectedServer = server;
+            selectedServer = new LoginServer(name, url, isCustom);
         } else {
 
             // First time selection defaults to the first server on the list.
@@ -233,7 +229,7 @@ public class LoginServerManager {
 	 * @return List of login servers or null.
 	 */
 	public List<LoginServer> getLoginServersFromRuntimeConfig() {
-		RuntimeConfig runtimeConfig = RuntimeConfig.getRuntimeConfig(ctx);
+		final RuntimeConfig runtimeConfig = RuntimeConfig.getRuntimeConfig(ctx);
 		String[] mdmLoginServers = null;
 		try {
 			mdmLoginServers = runtimeConfig.getStringArray(ConfigKey.AppServiceHosts);
@@ -246,7 +242,7 @@ public class LoginServerManager {
 				mdmLoginServers = new String[] {loginServer};
 			}
 		}
-		final List<LoginServer> allServers = new ArrayList<LoginServer>();
+		final List<LoginServer> allServers = new ArrayList<>();
 		if (mdmLoginServers != null) {
 			String[] mdmLoginServersLabels = null;
 			try {
@@ -261,13 +257,13 @@ public class LoginServerManager {
 				}
 			}
 			if (mdmLoginServersLabels == null || mdmLoginServersLabels.length != mdmLoginServers.length) {
-                SalesforceSDKLogger.w(TAG, "No login servers labels provided or wrong number of login servers labels provided - Using URLs for the labels");
+                SalesforceSDKLogger.w(TAG, "No login servers labels provided or wrong number of login servers labels provided - using URLs for the labels");
 				mdmLoginServersLabels = mdmLoginServers;
 			}
             final List<LoginServer> storedServers = getLoginServersFromPreferences(runtimePrefs);
 			for (int i = 0; i < mdmLoginServers.length; i++) {
-				String name = mdmLoginServersLabels[i];
-				String url = mdmLoginServers[i];
+				final String name = mdmLoginServersLabels[i];
+				final String url = mdmLoginServers[i];
 				final LoginServer server = new LoginServer(name, url, false);
                 if (storedServers == null || !storedServers.contains(server)) {
                     persistLoginServer(name, url, false, runtimePrefs);
@@ -292,12 +288,11 @@ public class LoginServerManager {
 	 * (only called when servers.xml is missing).
 	 */
 	private List<LoginServer> getLegacyLoginServers() {
-		final SalesforceR salesforceR = SalesforceSDKManager.getInstance().getSalesforceR();
-		final List<LoginServer> loginServers = new ArrayList<LoginServer>();
-		final LoginServer productionServer = new LoginServer(ctx.getString(salesforceR.stringAuthLoginProduction()),
+		final List<LoginServer> loginServers = new ArrayList<>();
+		final LoginServer productionServer = new LoginServer(ctx.getString(R.string.sf__auth_login_production),
 				PRODUCTION_LOGIN_URL, false);
 		loginServers.add(productionServer);
-		final LoginServer sandboxServer = new LoginServer(ctx.getString(salesforceR.stringAuthLoginSandbox()),
+		final LoginServer sandboxServer = new LoginServer(ctx.getString(R.string.sf__auth_login_sandbox),
 				SANDBOX_LOGIN_URL, false);
 		loginServers.add(sandboxServer);
 		return loginServers;
@@ -312,14 +307,14 @@ public class LoginServerManager {
 		List<LoginServer> loginServers = null;
 		int id = ctx.getResources().getIdentifier("servers", "xml", ctx.getPackageName());
 		if (id != 0) {
-			loginServers = new ArrayList<LoginServer>();
+			loginServers = new ArrayList<>();
 			final XmlResourceParser xml = ctx.getResources().getXml(id);
 			int eventType = -1;		
 			while (eventType != XmlResourceParser.END_DOCUMENT) {
 				if (eventType == XmlResourceParser.START_TAG) {
 					if (xml.getName().equals("server")) {
-						String name = xml.getAttributeValue(null, "name");
-						String url = xml.getAttributeValue(null, "url");
+						final String name = xml.getAttributeValue(null, "name");
+						final String url = xml.getAttributeValue(null, "url");
 						final LoginServer loginServer = new LoginServer(name,
 								url, false);
 						loginServers.add(loginServer);
@@ -327,9 +322,7 @@ public class LoginServerManager {
 				}
 				try {
 					eventType = xml.next();
-				} catch (XmlPullParserException e) {
-                    SalesforceSDKLogger.w(TAG, "Exception thrown while parsing XML", e);
-				} catch (IOException e) {
+				} catch (XmlPullParserException | IOException e) {
                     SalesforceSDKLogger.w(TAG, "Exception thrown while parsing XML", e);
 				}
 			}
@@ -347,17 +340,20 @@ public class LoginServerManager {
 		if (values != null && !values.isEmpty()) {
 			return;
 		}
-		List<LoginServer> servers = getLoginServersFromXML();
-		if (servers == null || servers.isEmpty()) {
-			servers = getLegacyLoginServers();
-		}
+		List<LoginServer> servers = getLoginServers();
+                if (servers == null || servers.isEmpty()) {
+            	    servers = getLoginServersFromXML();
+                    if (servers == null || servers.isEmpty()) {
+                        servers = getLegacyLoginServers();
+                    }
+                }
 		int numServers = servers.size();
 	    final Editor edit = settings.edit();
 		for (int i = 0; i < numServers; i++) {
 			final LoginServer curServer = servers.get(i);
-			edit.putString(String.format(SERVER_NAME, i), curServer.name);
-		    edit.putString(String.format(SERVER_URL, i), curServer.url);
-		    edit.putBoolean(String.format(IS_CUSTOM, i), curServer.isCustom);
+			edit.putString(String.format(Locale.US, SERVER_NAME, i), curServer.name.trim());
+		    edit.putString(String.format(Locale.US, SERVER_URL, i), curServer.url.trim());
+		    edit.putBoolean(String.format(Locale.US, IS_CUSTOM, i), curServer.isCustom);
 		    if (i == 0) {
 		    	setSelectedLoginServer(curServer);
 		    }
@@ -380,9 +376,9 @@ public class LoginServerManager {
 		}
 		int numServers = sharedPrefs.getInt(NUMBER_OF_ENTRIES, 0);
 		final Editor edit = sharedPrefs.edit();
-		edit.putString(String.format(SERVER_NAME, numServers), name);
-		edit.putString(String.format(SERVER_URL, numServers), url);
-		edit.putBoolean(String.format(IS_CUSTOM, numServers), isCustom);
+		edit.putString(String.format(Locale.US, SERVER_NAME, numServers), name.trim());
+		edit.putString(String.format(Locale.US, SERVER_URL, numServers), url.trim());
+		edit.putBoolean(String.format(Locale.US, IS_CUSTOM, numServers), isCustom);
 		edit.putInt(NUMBER_OF_ENTRIES, ++numServers);
 		edit.commit();
 	}
@@ -398,13 +394,13 @@ public class LoginServerManager {
 		if (numServers == 0) {
 			return null;
 		}
-		final List<LoginServer> allServers = new ArrayList<LoginServer>();
+		final List<LoginServer> allServers = new ArrayList<>();
 		for (int i = 0; i < numServers; i++) {
-			final String name = prefs.getString(String.format(SERVER_NAME, i), null);
-			final String url = prefs.getString(String.format(SERVER_URL, i), null);
-			boolean isCustom = prefs.getBoolean(String.format(IS_CUSTOM, i), false);
+			final String name = prefs.getString(String.format(Locale.US, SERVER_NAME, i), null);
+			final String url = prefs.getString(String.format(Locale.US, SERVER_URL, i), null);
+			boolean isCustom = prefs.getBoolean(String.format(Locale.US, IS_CUSTOM, i), false);
 			if (name != null && url != null) {
-				final LoginServer server = new LoginServer(name, url, isCustom);
+				final LoginServer server = new LoginServer(name, url.trim(), isCustom);
 				allServers.add(server);
 			}
 		}

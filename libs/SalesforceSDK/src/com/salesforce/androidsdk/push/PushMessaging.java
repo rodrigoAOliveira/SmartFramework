@@ -30,20 +30,25 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
+import android.content.pm.PackageInfo;
 import android.content.pm.PackageManager;
-import android.content.pm.ResolveInfo;
-import android.content.pm.ServiceInfo;
+import android.content.res.Resources;
 import android.os.Bundle;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.GoogleApiAvailability;
-import com.google.android.gms.iid.InstanceID;
+import com.google.firebase.FirebaseApp;
+import com.google.firebase.FirebaseOptions;
+import com.google.firebase.iid.FirebaseInstanceId;
 import com.salesforce.androidsdk.accounts.UserAccount;
+import com.salesforce.androidsdk.config.BootConfig;
 import com.salesforce.androidsdk.util.SalesforceSDKLogger;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import androidx.core.app.JobIntentService;
 
 /**
  * This class provides utility functions related to push notifications,
@@ -57,10 +62,11 @@ import java.util.concurrent.Executors;
 public class PushMessaging {
 
     private static final String TAG = "PushMessaging";
+    private static final int JOB_ID = 8;
 
 	// Public constants.
-    public static final String UNREGISTERED_ATTEMPT_COMPLETE_EVENT = "com.salesfore.mobilesdk.c2dm.UNREGISTERED";
-    public static final String UNREGISTERED_EVENT = "com.salesfore.mobilesdk.c2dm.ACTUAL_UNREGISTERED";
+    public static final String UNREGISTERED_ATTEMPT_COMPLETE_EVENT = "com.salesforce.mobilesdk.c2dm.UNREGISTERED";
+    public static final String UNREGISTERED_EVENT = "com.salesforce.mobilesdk.c2dm.ACTUAL_UNREGISTERED";
     public static final String ACCOUNT_BUNDLE_KEY = "account_bundle";
     public static final String ALL_ACCOUNTS_BUNDLE_VALUE = "all_accounts";
     public static final String GCM_PREFS = "gcm_prefs";
@@ -73,7 +79,7 @@ public class PushMessaging {
     private static final String IN_PROGRESS = "inprogress";
     private static final long DEFAULT_BACKOFF = 30000;
 
-    // background executor
+    // Background executor.
     private static final ExecutorService threadPool = Executors.newFixedThreadPool(2);
 
     /**
@@ -92,12 +98,13 @@ public class PushMessaging {
     	 * account hasn't been registered yet. Otherwise, performs
     	 * re-registration at the SFDC endpoint, to keep it alive.
     	 */
+    	initializeFirebaseIfNeeded(context);
         if (account != null && !isRegistered(context, account)) {
             setInProgress(context, true, account);
             if (checkPlayServices(context)) {
-                // Start IntentService to register this application with GCM.
-                Intent intent = new Intent(context, SFDCRegistrationIntentService.class);
-                context.startService(intent);
+                final Intent intent = new Intent(context, SFDCRegistrationIntentService.class);
+                JobIntentService.enqueueWork(context, SFDCRegistrationIntentService.class,
+                        JOB_ID, intent);
             }
         } else {
             registerSFDCPush(context, account);
@@ -105,33 +112,75 @@ public class PushMessaging {
     }
 
     /**
-     * Performs GCM and SFDC un-registration from push notifications for the
-     * specified user account.
+     * Performs SFDC un-registration from push notifications for the specified user account.
+     * Performs GCM un-registration only if this is the last account being logged out.
      *
-     * @param context
-     *         Context.
-     * @param account
-     *         User account.
+     * @param context Context.
+     * @param account User account.
+     * @param isLastAccount True - if this is the last logged in account, False - otherwise.
      */
-    public static void unregister(Context context, UserAccount account) {
+    public static void unregister(Context context, UserAccount account, boolean isLastAccount) {
         if (isRegistered(context, account)) {
             setInProgress(context, true, account);
-            final InstanceID instanceID = InstanceID.getInstance(context);
 
-            threadPool.execute(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        // avoid running on main thread
-                        instanceID.deleteInstanceID();
-                    } catch (IOException e) {
-                        SalesforceSDKLogger.e(TAG, "Error deleting InstanceID", e);
+            // Deletes InstanceID only if there are no other logged in accounts.
+            if (isLastAccount) {
+                initializeFirebaseIfNeeded(context);
+                String appName = getAppNameForFirebase(context);
+                final FirebaseInstanceId instanceID = FirebaseInstanceId.getInstance(FirebaseApp.getInstance(appName));
+                threadPool.execute(new Runnable() {
+
+                    @Override
+                    public void run() {
+                        try {
+                            instanceID.deleteInstanceId();
+                        } catch (IOException e) {
+                            SalesforceSDKLogger.e(TAG, "Error deleting InstanceID", e);
+                        }
                     }
-                }
-            });
-
+                });
+            }
             unregisterSFDCPush(context, account);
         }
+    }
+
+    /**
+     * Will make call to Firebase.initializeApp if it hasn't already taken place.
+     *
+     * @param context Context
+     */
+    public static void initializeFirebaseIfNeeded(Context context) {
+        String appName = getAppNameForFirebase(context);
+        final String pushClientId = BootConfig.getBootConfig(context).getPushNotificationClientId();
+        final FirebaseOptions firebaseOptions = new FirebaseOptions.Builder().
+                setGcmSenderId(pushClientId).setApplicationId(context.getPackageName()).build();
+        /*
+         * Ensures that Firebase initialization occurs only once for this app. If an exception
+         * isn't thrown, this means that the initialization has already been completed.
+         */
+        try {
+            FirebaseApp.getInstance(appName);
+        } catch (IllegalStateException e) {
+            SalesforceSDKLogger.w(TAG, "Firebase hasn't been initialized yet", e);
+            FirebaseApp.initializeApp(context, firebaseOptions, appName);
+        }
+    }
+
+    /**
+     * Get the app unique name for firebase
+     *
+     * @param context Context
+     * @return appName String
+     */
+    public static String getAppNameForFirebase(Context context) {
+        String appName = "[DEFAULT]";
+        try {
+            final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
+            appName = context.getString(packageInfo.applicationInfo.labelRes);
+        } catch (PackageManager.NameNotFoundException | Resources.NotFoundException e) {
+            SalesforceSDKLogger.w(TAG, "Package info could not be retrieved", e);
+        }
+        return appName;
     }
 
     /**
@@ -146,7 +195,7 @@ public class PushMessaging {
     }
 
     /**
-     * Initiates push unregistration against the SFDC endpoint.
+     * Initiates push un-registration against the SFDC endpoint.
      *
      * @param context Context.
      * @param account User account.
@@ -362,37 +411,12 @@ public class PushMessaging {
         editor.commit();
     }
 
-    /**
-     * Returns the name of the shared pref file for the specified account.
-     *
-     * @param account User account.
-     * @return Name of the shared pref file.
-     */
     private static String getSharedPrefFile(UserAccount account) {
     	String sharedPrefFile = GCM_PREFS;
     	if (account != null) {
     		sharedPrefFile = sharedPrefFile + account.getUserLevelFilenameSuffix();
     	}
     	return sharedPrefFile;
-    }
-
-    /**
-     * Returns the service info associated with an intent.
-     *
-     * @param context Context.
-     * @param intent Intent.
-     * @return Service info.
-     */
-    private static ServiceInfo getServiceInfo(Context context, Intent intent) {
-    	ServiceInfo si = null;
-    	final PackageManager pm = context.getPackageManager();
-        if (pm != null) {
-        	final ResolveInfo ri = pm.resolveService(intent, 0);
-        	if (ri != null) {
-        		si = ri.serviceInfo;
-        	}
-        }
-        return si;
     }
 
     private static boolean checkPlayServices(Context context) {

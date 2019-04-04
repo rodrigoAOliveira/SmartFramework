@@ -28,9 +28,6 @@ package com.salesforce.androidsdk.analytics;
 
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
 import android.os.Build;
 import android.text.TextUtils;
 
@@ -41,6 +38,7 @@ import com.salesforce.androidsdk.analytics.model.InstrumentationEvent;
 import com.salesforce.androidsdk.analytics.store.EventStoreManager;
 import com.salesforce.androidsdk.analytics.transform.AILTNTransform;
 import com.salesforce.androidsdk.analytics.transform.Transform;
+import com.salesforce.androidsdk.app.Features;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
 import com.salesforce.androidsdk.config.AdminSettingsManager;
 import com.salesforce.androidsdk.config.BootConfig;
@@ -71,7 +69,7 @@ public class SalesforceAnalyticsManager {
     private static final String AILTN_POLICY_PREF = "ailtn_policy";
     private static final int DEFAULT_PUBLISH_FREQUENCY_IN_HOURS = 8;
     private static final String TAG = "AnalyticsManager";
-    private static final String FEATURE_AILTN_ENABLED = "AI";
+    private static final String UNAUTH_INSTANCE_KEY = "_no_user";
 
     private static Map<String, SalesforceAnalyticsManager> INSTANCES;
     private static boolean sPublishHandlerActive;
@@ -83,6 +81,15 @@ public class SalesforceAnalyticsManager {
     private UserAccount account;
     private boolean enabled;
     private Map<Class<? extends Transform>, Class<? extends AnalyticsPublisher>> remotes;
+
+    /**
+     * Returns the instance of this class associated with an unauthenticated user context.
+     *
+     * @return Instance of this class.
+     */
+    public static synchronized SalesforceAnalyticsManager getUnauthenticatedInstance() {
+        return getInstance(null);
+    }
 
     /**
      * Returns the instance of this class associated with this user account.
@@ -102,29 +109,26 @@ public class SalesforceAnalyticsManager {
      * @return Instance of this class.
      */
     public static synchronized SalesforceAnalyticsManager getInstance(UserAccount account, String communityId) {
-        if (account == null) {
-            account = SalesforceSDKManager.getInstance().getUserAccountManager().getCurrentUser();
+        String uniqueId = UNAUTH_INSTANCE_KEY;
+        if (account != null) {
+            uniqueId = account.getUserId();
+            if (UserAccount.INTERNAL_COMMUNITY_ID.equals(communityId)) {
+                communityId = null;
+            }
+            if (!TextUtils.isEmpty(communityId)) {
+                uniqueId = uniqueId + communityId;
+            }
         }
-        if (account == null) {
-            return null;
-        }
-        String uniqueId = account.getUserId();
-        if (UserAccount.INTERNAL_COMMUNITY_ID.equals(communityId)) {
-            communityId = null;
-        }
-        if (!TextUtils.isEmpty(communityId)) {
-            uniqueId = uniqueId + communityId;
-        }
-        SalesforceAnalyticsManager instance = null;
+        SalesforceAnalyticsManager instance;
         if (INSTANCES == null) {
-            INSTANCES = new HashMap<String, SalesforceAnalyticsManager>();
-            instance = new SalesforceAnalyticsManager(account, communityId);
+            INSTANCES = new HashMap<>();
+            instance = new SalesforceAnalyticsManager(account);
             INSTANCES.put(uniqueId, instance);
         } else {
             instance = INSTANCES.get(uniqueId);
         }
         if (instance == null) {
-            instance = new SalesforceAnalyticsManager(account, communityId);
+            instance = new SalesforceAnalyticsManager(account);
             INSTANCES.put(uniqueId, instance);
         }
 
@@ -134,6 +138,13 @@ public class SalesforceAnalyticsManager {
             sPublishHandlerActive = true;
         }
         return instance;
+    }
+
+    /**
+     * Resets the instance of this class associated with an unauthenticated user context.
+     */
+    public static synchronized void resetUnauthenticatedInstance() {
+        reset(null);
     }
 
     /**
@@ -152,50 +163,23 @@ public class SalesforceAnalyticsManager {
      * @param communityId Community ID.
      */
     public static synchronized void reset(UserAccount account, String communityId) {
-        if (account == null) {
-            account = SalesforceSDKManager.getInstance().getUserAccountManager().getCurrentUser();
-        }
+        String uniqueId = UNAUTH_INSTANCE_KEY;
         if (account != null) {
-            String uniqueId = account.getUserId();
+            uniqueId = account.getUserId();
             if (UserAccount.INTERNAL_COMMUNITY_ID.equals(communityId)) {
                 communityId = null;
             }
             if (!TextUtils.isEmpty(communityId)) {
                 uniqueId = uniqueId + communityId;
             }
-            if (INSTANCES != null) {
-                final SalesforceAnalyticsManager manager = INSTANCES.get(uniqueId);
-                if (manager != null) {
-                    manager.analyticsManager.reset();
-                    manager.resetAnalyticsPolicy();
-                }
-                INSTANCES.remove(uniqueId);
-            }
         }
-    }
-
-    /**
-     * Changes the passcode to a new value and re-encrypts the
-     * stored event data with the new passcode.
-     *
-     * @param oldPass Old passcode.
-     * @param newPass New passcode.
-     */
-    public static synchronized void changePasscode(String oldPass, String newPass) {
-        final SalesforceSDKManager sdkManager = SalesforceSDKManager.getInstance();
-        final String oldEncryptionKey = sdkManager.getEncryptionKeyForPasscode(oldPass);
-        final String newEncryptionKey = sdkManager.getEncryptionKeyForPasscode(newPass);
         if (INSTANCES != null) {
-            final Set<String> keys = INSTANCES.keySet();
-            if (keys != null) {
-                for (final String key : keys) {
-                    final SalesforceAnalyticsManager sfAnalyticsManager = INSTANCES.get(key);
-                    if (sfAnalyticsManager != null) {
-                        sfAnalyticsManager.analyticsManager.changeEncryptionKey(oldEncryptionKey,
-                                newEncryptionKey);
-                    }
-                }
+            final SalesforceAnalyticsManager manager = INSTANCES.get(uniqueId);
+            if (manager != null) {
+                manager.analyticsManager.reset();
+                manager.resetAnalyticsPolicy();
             }
+            INSTANCES.remove(uniqueId);
         }
     }
 
@@ -247,9 +231,9 @@ public class SalesforceAnalyticsManager {
      */
     public void enableLogging(boolean enabled) {
         if (enabled) {
-            SalesforceSDKManager.getInstance().registerUsedAppFeature(FEATURE_AILTN_ENABLED);
+            SalesforceSDKManager.getInstance().registerUsedAppFeature(Features.FEATURE_AILTN_ENABLED);
         } else {
-            SalesforceSDKManager.getInstance().unregisterUsedAppFeature(FEATURE_AILTN_ENABLED);
+            SalesforceSDKManager.getInstance().unregisterUsedAppFeature(Features.FEATURE_AILTN_ENABLED);
         }
         storeAnalyticsPolicy(enabled);
         eventStoreManager.enableLogging(enabled);
@@ -302,7 +286,7 @@ public class SalesforceAnalyticsManager {
         if (events == null || events.size() == 0) {
             return;
         }
-        final List<String> eventsIds = new ArrayList<String>();
+        final List<String> eventsIds = new ArrayList<>();
         boolean success = true;
         final Set<Class<? extends Transform>> remoteKeySet = remotes.keySet();
         for (final Class<? extends Transform> transformClass : remoteKeySet) {
@@ -362,7 +346,7 @@ public class SalesforceAnalyticsManager {
         if (event == null) {
             return;
         }
-        final List<InstrumentationEvent> events = new ArrayList<InstrumentationEvent>();
+        final List<InstrumentationEvent> events = new ArrayList<>();
         events.add(event);
         publishEvents(events);
     }
@@ -371,7 +355,7 @@ public class SalesforceAnalyticsManager {
      * Adds a remote publisher to publish events to.
      *
      * @param transformer Transformer class.
-     * @param publisher Publisher class.
+     * @param publisher   Publisher class.
      */
     public void addRemotePublisher(Class<? extends Transform> transformer,
                                    Class<? extends AnalyticsPublisher> publisher) {
@@ -382,16 +366,16 @@ public class SalesforceAnalyticsManager {
         remotes.put(transformer, publisher);
     }
 
-    private SalesforceAnalyticsManager(UserAccount account, String communityId) {
+    private SalesforceAnalyticsManager(UserAccount account) {
         this.account = account;
-        final DeviceAppAttributes deviceAppAttributes = buildDeviceAppAttributes();
         final SalesforceSDKManager sdkManager = SalesforceSDKManager.getInstance();
-        analyticsManager = new AnalyticsManager(account.getCommunityLevelFilenameSuffix(),
-                sdkManager.getAppContext(),
-                sdkManager.getEncryptionKeyForPasscode(sdkManager.getPasscodeHash()),
-                deviceAppAttributes);
+        final DeviceAppAttributes deviceAppAttributes = getDeviceAppAttributes();
+        final String filenameSuffix = (account != null) ? account.getCommunityLevelFilenameSuffix()
+                : UNAUTH_INSTANCE_KEY;
+        analyticsManager = new AnalyticsManager(filenameSuffix, sdkManager.getAppContext(),
+                SalesforceSDKManager.getEncryptionKey(), deviceAppAttributes);
         eventStoreManager = analyticsManager.getEventStoreManager();
-        remotes = new HashMap<Class<? extends Transform>, Class<? extends AnalyticsPublisher>>();
+        remotes = new HashMap<>();
         remotes.put(AILTNTransform.class, AILTNPublisher.class);
 
         // Reads the existing analytics policy and sets it upon initialization.
@@ -399,22 +383,14 @@ public class SalesforceAnalyticsManager {
         enableLogging(enabled);
     }
 
-    private DeviceAppAttributes buildDeviceAppAttributes() {
+    /**
+     * Returns the device app attributes associated with this device.
+     *
+     * @return Device app attributes.
+     */
+    public static DeviceAppAttributes getDeviceAppAttributes() {
         final SalesforceSDKManager sdkManager = SalesforceSDKManager.getInstance();
         final Context context = sdkManager.getAppContext();
-        String appVersion = "";
-        String appName = "";
-        try {
-            final PackageInfo packageInfo = context.getPackageManager().getPackageInfo(context.getPackageName(), 0);
-            appVersion = packageInfo.versionName;
-            appName = SalesforceSDKManager.getAiltnAppName();
-        } catch (PackageManager.NameNotFoundException e) {
-            SalesforceSDKLogger.w(TAG, "Could not read package info", e);
-        } catch (Resources.NotFoundException nfe) {
-
-            // A test harness such as Gradle does NOT have an application name.
-            SalesforceSDKLogger.w(TAG, "Could not read package info", nfe);
-        }
         final String osVersion = Build.VERSION.RELEASE;
         final String osName = "android";
         final String appType = sdkManager.getAppType();
@@ -422,13 +398,16 @@ public class SalesforceAnalyticsManager {
         final String deviceModel = Build.MODEL;
         final String deviceId = sdkManager.getDeviceId();
         final String clientId = BootConfig.getBootConfig(context).getRemoteAccessConsumerKey();
-        return new DeviceAppAttributes(appVersion, appName, osVersion, osName, appType,
+        return new DeviceAppAttributes(sdkManager.getAppVersion(),
+                SalesforceSDKManager.getAiltnAppName(), osVersion, osName, appType,
                 mobileSdkVersion, deviceModel, deviceId, clientId);
     }
 
     private synchronized void storeAnalyticsPolicy(boolean enabled) {
         final Context context = SalesforceSDKManager.getInstance().getAppContext();
-        final String filename = AILTN_POLICY_PREF + account.getUserLevelFilenameSuffix();
+        final String filenameSuffix = (account != null) ? account.getUserLevelFilenameSuffix()
+                : UNAUTH_INSTANCE_KEY;
+        final String filename = AILTN_POLICY_PREF + filenameSuffix;
         final SharedPreferences sp = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e = sp.edit();
         e.putBoolean(ANALYTICS_ON_OFF_KEY, enabled);
@@ -438,7 +417,9 @@ public class SalesforceAnalyticsManager {
 
     private void readAnalyticsPolicy() {
         final Context context = SalesforceSDKManager.getInstance().getAppContext();
-        final String filename = AILTN_POLICY_PREF + account.getUserLevelFilenameSuffix();
+        final String filenameSuffix = (account != null) ? account.getUserLevelFilenameSuffix()
+                : UNAUTH_INSTANCE_KEY;
+        final String filename = AILTN_POLICY_PREF + filenameSuffix;
         final SharedPreferences sp = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
         if (!sp.contains(ANALYTICS_ON_OFF_KEY)) {
             storeAnalyticsPolicy(true);
@@ -448,7 +429,9 @@ public class SalesforceAnalyticsManager {
 
     private void resetAnalyticsPolicy() {
         final Context context = SalesforceSDKManager.getInstance().getAppContext();
-        final String filename = AILTN_POLICY_PREF + account.getUserLevelFilenameSuffix();
+        final String filenameSuffix = (account != null) ? account.getUserLevelFilenameSuffix()
+                : UNAUTH_INSTANCE_KEY;
+        final String filename = AILTN_POLICY_PREF + filenameSuffix;
         final SharedPreferences sp = context.getSharedPreferences(filename, Context.MODE_PRIVATE);
         final SharedPreferences.Editor e = sp.edit();
         e.clear();

@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:1.5'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
@@ -14,12 +14,20 @@ apply plugin: 'com.github.dcendents.android-maven'
 apply plugin: 'com.jfrog.bintray'
 
 dependencies {
-    compile 'com.squareup:tape:1.2.3'
+    api 'com.squareup:tape:1.2.3'
+    androidTestImplementation 'androidx.test:runner:1.1.0'
+    androidTestImplementation 'androidx.test:rules:1.1.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.0.0'
 }
 
 android {
-  compileSdkVersion 26
-  buildToolsVersion '26.0.0'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.3'
+
+    defaultConfig {
+        targetSdkVersion 28
+        minSdkVersion 21
+    }
 
   buildTypes {
     debug {
@@ -46,7 +54,7 @@ android {
   }
   defaultConfig {
     testApplicationId "com.salesforce.androidsdk.analytics.tests"
-    testInstrumentationRunner "com.salesforce.androidsdk.analytics.util.test.JUnitReportTestRunner"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   packagingOptions {
     exclude 'META-INF/LICENSE'
@@ -56,14 +64,9 @@ android {
   }
 
   lintOptions {
+    xmlReport true
     abortOnError false
   }
-}
-
-afterEvaluate {
-  // Find all connected Android tests and ensure they log all passed tests. This keeps the Travis
-  // from timing out since executing tests are printed to the console.
-  tasks.matching { it.name ==~ /^connected.*AndroidTest$/ }*.logging*.setLevel(LogLevel.INFO)
 }
 
 install {
@@ -124,9 +127,9 @@ bintray {
         licenses = ['Apache-2.0']
         labels = ['android', 'salesforce', 'mobilesdk']
         version {
-            name = '5.2.0'
+            name = '7.0.0'
             released  = new Date()
-            vcsTag = 'v5.2.0'
+            vcsTag = 'v7.0.0'
         }
     }
 }

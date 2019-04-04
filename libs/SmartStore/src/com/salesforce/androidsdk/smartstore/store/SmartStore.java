@@ -28,6 +28,7 @@ package com.salesforce.androidsdk.smartstore.store;
 
 import android.content.ContentValues;
 import android.database.Cursor;
+import androidx.annotation.NonNull;
 import android.text.TextUtils;
 
 import com.salesforce.androidsdk.analytics.EventBuilderHelper;
@@ -73,22 +74,22 @@ public class SmartStore  {
     protected static final String SOUP_NAMES_TABLE = "soup_names";
 
 	// Table to keep track of soup names and attributes.
-	protected static final String SOUP_ATTRS_TABLE = "soup_attrs";
+	public static final String SOUP_ATTRS_TABLE = "soup_attrs";
 
 	// Fts table suffix
 	public static final String FTS_SUFFIX = "_fts";
 
 	// Table to keep track of soup's index specs
-    protected static final String SOUP_INDEX_MAP_TABLE = "soup_index_map";
+    public static final String SOUP_INDEX_MAP_TABLE = "soup_index_map";
 
     // Table to keep track of status of long operations in flight
     protected static final String LONG_OPERATIONS_STATUS_TABLE = "long_operations_status";
 
     // Columns of the soup index map table
-    protected static final String SOUP_NAME_COL = "soupName";
-    protected static final String PATH_COL = "path";
+    public static final String SOUP_NAME_COL = "soupName";
+    public static final String PATH_COL = "path";
     protected static final String COLUMN_NAME_COL = "columnName";
-    protected static final String COLUMN_TYPE_COL = "columnType";
+    public static final String COLUMN_TYPE_COL = "columnType";
 
     // Columns of a soup table
     protected static final String ID_COL = "id";
@@ -117,7 +118,7 @@ public class SmartStore  {
 	// Backing database
 	protected SQLiteDatabase dbLocal;
 	protected SQLiteOpenHelper dbOpenHelper;
-	protected String passcode;
+	protected String encryptionKey;
 
 	// FTS extension to use
 	protected FtsExtension ftsExtension = FtsExtension.fts5;
@@ -215,11 +216,11 @@ public class SmartStore  {
      * Relies on SQLiteOpenHelper for database handling.
      *
      * @param dbOpenHelper DB open helper.
-     * @param passcode Passcode.
+     * @param encryptionKey Encryption key.
      */
-    public SmartStore(SQLiteOpenHelper dbOpenHelper, String passcode) {
+    public SmartStore(SQLiteOpenHelper dbOpenHelper, String encryptionKey) {
     	this.dbOpenHelper = dbOpenHelper;
-        this.passcode = passcode;
+        this.encryptionKey = encryptionKey;
     }
 
     /**
@@ -229,7 +230,7 @@ public class SmartStore  {
     	if (dbLocal != null) {
             return dbLocal;
         } else {
-            return this.dbOpenHelper.getWritableDatabase(passcode);
+            return this.dbOpenHelper.getWritableDatabase(encryptionKey);
         }
     }
 
@@ -619,7 +620,7 @@ public class SmartStore  {
 			        	try {
 			                JSONObject soupElt;
 			                if (usesExternalStorage(soupName) && dbOpenHelper instanceof DBOpenHelper) {
-			                	soupElt = ((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, Long.parseLong(soupEntryId), passcode);
+			                	soupElt = ((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, Long.parseLong(soupEntryId), encryptionKey);
 			                } else {
 			                	String soupRaw = cursor.getString(1);
 			                	soupElt = new JSONObject(soupRaw);
@@ -796,84 +797,144 @@ public class SmartStore  {
      * @throws JSONException
 	 */
 	public JSONArray query(QuerySpec querySpec, int pageIndex) throws JSONException {
+		StringBuilder resultBuilder = new StringBuilder();
+		queryAsString(resultBuilder, querySpec, pageIndex);
+		return new JSONArray(resultBuilder.toString());
+	}
+	/**
+	 * Run a query given by its query Spec, only returned results from selected page
+	 * without deserializing any JSON
+	 *
+	 * @param resultBuilder string builder to which results are appended
+	 * @param querySpec
+	 * @param pageIndex
+	 */
+	public void queryAsString(StringBuilder resultBuilder, QuerySpec querySpec, int pageIndex) {
 		final SQLiteDatabase db = getDatabase();
-    	synchronized(db) {
+		synchronized(db) {
 			QueryType qt = querySpec.queryType;
-	    	String sql = convertSmartSql(querySpec.smartSql);
+			String sql = convertSmartSql(querySpec.smartSql);
 
-	        // Page
-	        int offsetRows = querySpec.pageSize * pageIndex;
-	        int numberRows = querySpec.pageSize;
-	        String limit = offsetRows + "," + numberRows;
-	    	Cursor cursor = null;
-	    	try {
-	    		cursor = DBHelper.getInstance(db).limitRawQuery(db, sql, limit, querySpec.getArgs());
-	            JSONArray results = new JSONArray();
-	            if (cursor.moveToFirst()) {
-	                do {
-	                	// Smart queries
-	                	if (qt == QueryType.smart || querySpec.selectPaths != null) {
-	                		results.put(getDataFromRow(cursor));
-	                	}
-	            		// Exact/like/range queries
-	                	else {
-	                		if (cursor.getColumnIndex(SoupSpec.FEATURE_EXTERNAL_STORAGE) >= 0) {
+			// Page
+			int offsetRows = querySpec.pageSize * pageIndex;
+			int numberRows = querySpec.pageSize;
+			String limit = offsetRows + "," + numberRows;
+			Cursor cursor = null;
+			try {
+				cursor = DBHelper.getInstance(db).limitRawQuery(db, sql, limit, querySpec.getArgs());
+				resultBuilder.append("[");
+				int currentRow = 0;
+				if (cursor.moveToFirst()) {
+					do {
+						if (currentRow > 0) {
+							resultBuilder.append(", ");
+						}
+						currentRow++;
+
+						// Smart queries
+						if (qt == QueryType.smart || querySpec.selectPaths != null) {
+							getDataFromRowAsString(resultBuilder, cursor);
+						}
+						// Exact/like/range queries
+						else {
+							if (cursor.getColumnIndex(SoupSpec.FEATURE_EXTERNAL_STORAGE) >= 0) {
 								// Presence of external storage column implies we must fetch from storage. Soup name and entry id values can be extracted
 								String soupTableName = cursor.getString(cursor.getColumnIndex(SoupSpec.FEATURE_EXTERNAL_STORAGE));
 								Long soupEntryId = cursor.getLong(cursor.getColumnIndex(SmartStore.SOUP_ENTRY_ID));
-								results.put(((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, soupEntryId, passcode));
-	                		} else {
-								results.put(new JSONObject(cursor.getString(0)));
-	                		}
-	                	}
-	                } while (cursor.moveToNext());
-	            }
-	            return results;
-	    	} finally {
-	    		safeClose(cursor);
-	    	}
-    	}
+								resultBuilder.append(((DBOpenHelper) dbOpenHelper).loadSoupBlobAsString(soupTableName, soupEntryId, encryptionKey));
+							} else {
+								resultBuilder.append(cursor.getString(0));
+							}
+						}
+					} while (cursor.moveToNext());
+				}
+				resultBuilder.append("]");
+
+			} finally {
+				safeClose(cursor);
+			}
+		}
 	}
 
-
-	/**
-	 * Return JSONArray for one row of data from cursor
-	 * @param cursor
-	 * @return
-	 * @throws JSONException
-	 */
-	private JSONArray getDataFromRow(Cursor cursor) throws JSONException {
-		JSONArray row = new JSONArray();
+	private void getDataFromRowAsString(StringBuilder resultBuilder, Cursor cursor)  {
 		int columnCount = cursor.getColumnCount();
+		resultBuilder.append("[");
 		for (int i=0; i<columnCount; i++) {
-            int valueType = cursor.getType(i);
-            if (valueType == Cursor.FIELD_TYPE_NULL) {
-                row.put(null);
-            }
-            else if (valueType == Cursor.FIELD_TYPE_STRING) {
-                String raw = cursor.getString(i);
-                if (cursor.getColumnName(i).equals(SoupSpec.FEATURE_EXTERNAL_STORAGE)) {
-                    // Presence of external storage column implies we must fetch from storage. Soup name and entry id values can be extracted
-                    String soupTableName = cursor.getString(i);
-                    Long soupEntryId = cursor.getLong(i + 1);
-                    row.put(((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, soupEntryId, passcode));
-                    i++; // skip next column (_soupEntryId)
-                } else if (cursor.getColumnName(i).endsWith(SOUP_COL)) {
-                    row.put(new JSONObject(raw));
-                    // Note: we could end up returning a string if you aliased the column
-                }
-                else {
-                    row.put(raw);
-                }
-            }
-            else if (valueType == Cursor.FIELD_TYPE_INTEGER) {
-                row.put(cursor.getLong(i));
-            }
-            else if (valueType == Cursor.FIELD_TYPE_FLOAT) {
-                row.put(cursor.getDouble(i));
-            }
+			if (i > 0) {
+				resultBuilder.append(",");
+			}
+			int valueType = cursor.getType(i);
+			String columnName = cursor.getColumnName(i);
+			if (valueType == Cursor.FIELD_TYPE_NULL) {
+				resultBuilder.append("null");
+			}
+			else if (valueType == Cursor.FIELD_TYPE_STRING) {
+				String raw = cursor.getString(i);
+				if (columnName.equals(SoupSpec.FEATURE_EXTERNAL_STORAGE)) {
+					// Presence of external storage column implies we must fetch from storage. Soup name and entry id values can be extracted
+					String soupTableName = cursor.getString(i);
+					Long soupEntryId = cursor.getLong(i + 1);
+					resultBuilder.append(((DBOpenHelper) dbOpenHelper).loadSoupBlobAsString(soupTableName, soupEntryId, encryptionKey));
+					i++; // skip next column (_soupEntryId)
+				} else if (columnName.equals(SOUP_COL) || columnName.startsWith(SOUP_COL + ":") /* :num is appended to column name when result set has more than one column with same name */) {
+					resultBuilder.append(raw);
+					// Note: we could end up returning a string if you aliased the column
+				}
+				else {
+					raw = escapeStringValue(raw);
+					resultBuilder.append("\"").append(raw).append("\"");
+				}
+			}
+			else if (valueType == Cursor.FIELD_TYPE_INTEGER) {
+				resultBuilder.append(cursor.getLong(i));
+			}
+			else if (valueType == Cursor.FIELD_TYPE_FLOAT) {
+				resultBuilder.append(cursor.getDouble(i));
+			}
 		}
-		return row;
+		resultBuilder.append("]");
+	}
+
+	private String escapeStringValue(String raw) {
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < raw.length(); i ++) {
+			char c = raw.charAt(i);
+			switch (c) {
+				case '\\':
+				case '"':
+					sb.append('\\');
+					sb.append(c);
+					break;
+				case '/':
+					sb.append('\\');
+					sb.append(c);
+					break;
+				case '\b':
+					sb.append("\\b");
+					break;
+				case '\t':
+					sb.append("\\t");
+					break;
+				case '\n':
+					sb.append("\\n");
+					break;
+				case '\f':
+					sb.append("\\f");
+					break;
+				case '\r':
+					sb.append("\\r");
+					break;
+				default:
+					if (c < ' ') {
+						String t = "000" + Integer.toHexString(c);
+						sb.append("\\u" + t.substring(t.length() - 4));
+					} else {
+						sb.append(c);
+					}
+			}
+		}
+		return sb.toString();
 	}
 
 	/**
@@ -964,7 +1025,7 @@ public class SmartStore  {
 
 	            // Add to external storage if applicable
 	            if (success && usesExternalStorage(soupName) && dbOpenHelper instanceof DBOpenHelper) {
-					success = ((DBOpenHelper) dbOpenHelper).saveSoupBlob(soupTableName, soupEntryId, soupElt, passcode);
+					success = ((DBOpenHelper) dbOpenHelper).saveSoupBlob(soupTableName, soupEntryId, soupElt, encryptionKey);
 	            }
 
 	            // Commit if successful
@@ -1018,32 +1079,27 @@ public class SmartStore  {
      */
     private void projectIndexedPath(JSONObject soupElt, ContentValues contentValues, IndexSpec indexSpec) {
         Object value = project(soupElt, indexSpec.path);
-        switch (indexSpec.type) {
-        case integer:
-            Long longValToUse = null;
-            try {
-                longValToUse = ((Number) value).longValue();
-            }
-            catch (Exception e) {
-                // Ignore and use the null value
-                SmartStoreLogger.e(TAG, "Unexpected error", e);
-            }
-            contentValues.put(indexSpec.columnName, longValToUse);
-            break;
-        case string:
-        case full_text:
-            contentValues.put(indexSpec.columnName, value != null ? value.toString() : null); break;
-        case floating:
-            Double doubleValToUse = null;
-            try {
-                doubleValToUse = ((Number) value).doubleValue();
-            }
-            catch (Exception e) {
-                // Ignore and use the null value
-                SmartStoreLogger.e(TAG, "Unexpected error", e);
-            }
-            contentValues.put(indexSpec.columnName, doubleValToUse); break;
-        }
+
+		contentValues.put(indexSpec.columnName, (String) null); // fall back
+		if (value != null) {
+			try {
+				switch (indexSpec.type) {
+					case integer:
+						contentValues.put(indexSpec.columnName, ((Number) value).longValue());
+						break;
+					case string:
+					case full_text:
+						contentValues.put(indexSpec.columnName, value.toString());
+						break;
+					case floating:
+						contentValues.put(indexSpec.columnName, ((Number) value).doubleValue());
+						break;
+				}
+			} catch (Exception e) {
+				// Ignore (will use the null value)
+				SmartStoreLogger.e(TAG, "Unexpected error", e);
+			}
+		}
     }
 
     /**
@@ -1062,7 +1118,7 @@ public class SmartStore  {
 	        JSONArray result = new JSONArray();
 	        if (usesExternalStorage(soupName) && dbOpenHelper instanceof DBOpenHelper) {
 		        for (long soupEntryId : soupEntryIds) {
-			        JSONObject raw = ((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, soupEntryId, passcode);
+			        JSONObject raw = ((DBOpenHelper) dbOpenHelper).loadSoupBlob(soupTableName, soupEntryId, encryptionKey);
 			        if (raw != null) {
 				        result.put(raw);
 			        }
@@ -1154,7 +1210,7 @@ public class SmartStore  {
 
 				// Add to external storage if applicable
 				if (success && usesExternalStorage(soupName) && dbOpenHelper instanceof DBOpenHelper) {
-					success = ((DBOpenHelper) dbOpenHelper).saveSoupBlob(soupTableName, soupEntryId, soupElt, passcode);
+					success = ((DBOpenHelper) dbOpenHelper).saveSoupBlob(soupTableName, soupEntryId, soupElt, encryptionKey);
 				}
 
 				if (success) {
@@ -1224,6 +1280,10 @@ public class SmartStore  {
 	            if (externalIdObj != null) {
 	                entryId = lookupSoupEntryId(soupName, externalIdPath, externalIdObj + "");
 	            }
+	            else {
+					// Cannot have empty values for user-defined external ID upsert.
+					throw new SmartStoreException(String.format("For upsert with external ID path '%s', value cannot be empty for any entries.", externalIdPath));
+				}
 	        }
 
 	        // If we have an entryId, let's do an update, otherwise let's do a create
@@ -1608,4 +1668,39 @@ public class SmartStore  {
 			return DBHelper.getInstance(db).getFeatures(db, soupName).contains(SoupSpec.FEATURE_EXTERNAL_STORAGE);
 		}
 	}
+
+	/**
+	 * Get compile options
+	 *
+	 * @return list of compile options
+	 */
+	public List<String> getCompileOptions() {
+		return queryPragma("compile_options");
+	}
+
+	/**
+	 * Get sqlcipher version
+	 *
+	 * @return sqlcipher version
+	 */
+	public String getSQLCipherVersion() {
+		return TextUtils.join(" ", queryPragma("cipher_version"));
+	}
+
+	@NonNull
+	private List<String> queryPragma(String pragma) {
+		final SQLiteDatabase db = getDatabase();
+		ArrayList<String> results = new ArrayList<>();
+		Cursor c = null;
+		try {
+			c = db.rawQuery("PRAGMA " + pragma, null);
+			while (c.moveToNext()) {
+				results.add(c.getString(0));
+			}
+		} finally {
+			safeClose(c);
+		}
+		return results;
+	}
+
 }

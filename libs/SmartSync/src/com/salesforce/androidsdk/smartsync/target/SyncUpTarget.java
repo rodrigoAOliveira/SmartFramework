@@ -26,9 +26,6 @@
  */
 package com.salesforce.androidsdk.smartsync.target;
 
-import android.os.Environment;
-import android.util.Log;
-
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
@@ -40,16 +37,10 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -89,12 +80,12 @@ public class SyncUpTarget extends SyncTarget {
     public static final String CREATE_FIELDLIST = "createFieldlist";
     public static final String UPDATE_FIELDLIST = "updateFieldlist";
 
-
     // Fields
     protected List<String> createFieldlist;
     protected List<String> updateFieldlist;
 
-    protected List<SyncUpError> syncUpErrors;
+    // Last sync error
+    protected String lastError;
 
     /**
      * Build SyncUpTarget from json
@@ -125,7 +116,6 @@ public class SyncUpTarget extends SyncTarget {
      */
     public SyncUpTarget() {
         this(null, null);
-        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -135,7 +125,6 @@ public class SyncUpTarget extends SyncTarget {
         super();
         this.createFieldlist = createFieldlist;
         this.updateFieldlist = updateFieldlist;
-        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -147,7 +136,6 @@ public class SyncUpTarget extends SyncTarget {
         super(target);
         this.createFieldlist = JSONObjectHelper.toList(target.optJSONArray(CREATE_FIELDLIST));
         this.updateFieldlist = JSONObjectHelper.toList(target.optJSONArray(UPDATE_FIELDLIST));
-        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -161,93 +149,25 @@ public class SyncUpTarget extends SyncTarget {
         return target;
     }
 
+    /**
+     * Save record with last error if any
+     * @param syncManager
+     * @param soupName
+     * @param record
+     * @throws JSONException
+     */
+    public void saveRecordToLocalStoreWithLastError(SyncManager syncManager, String soupName, JSONObject record) throws JSONException {
+        saveRecordToLocalStoreWithError(syncManager, soupName, record, lastError);
+        lastError = null;
+    }
 
-    private enum Operations{
-        INSERT("INSERT"),
-        UPDATE("UPDATE"),
-        DELETE("DELETE");
-
-        final String operation;
-
-        Operations(String operation) {
-            this.operation = operation;
-        }
-
-        public String getOperation() {
-            return operation;
+    protected void saveRecordToLocalStoreWithError(SyncManager syncManager, String soupName, JSONObject record, String error) throws JSONException {
+        if (error != null) {
+            record.put(SyncTarget.LAST_ERROR, error);
+            saveInLocalStore(syncManager, soupName, record);
         }
     }
 
-    private void addSyncUpError(Operations operation, RestRequest request, RestResponse response, String objectType, Map<String, Object> fields) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-        String currentDateAndTime = sdf.format(new Date());
-
-        SyncUpError syncUpError = new SyncUpError();
-        syncUpError.setOperation(operation.getOperation());
-        syncUpError.setRequest(request);
-        syncUpError.setResponse(response);
-        syncUpError.setObjectType(objectType);
-        syncUpError.setFields(fields);
-        syncUpError.setDateTime(currentDateAndTime);
-
-        syncUpErrors.add(syncUpError);
-    }
-
-    private void saveSyncUpErrorLog(Operations operation, String error, String sObject, Map<String, Object> fields) {
-
-        String _operation = "";
-        if(operation == Operations.INSERT) {
-            _operation = "INSERT";
-        } else if(operation == Operations.UPDATE) {
-            _operation = "UPDATE";
-        } else if(operation == Operations.DELETE) {
-            _operation = "DELETE";
-        }
-
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-        String currentDateAndTime = sdf.format(new Date());
-
-        File directory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication");
-        File subDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication/ErrorLogs");
-
-        if(!directory.exists()) {
-            directory.mkdir();
-
-            if(!subDirectory.exists()) {
-                subDirectory.mkdir();
-            }
-        } else {
-            if(!subDirectory.exists()) {
-                subDirectory.mkdir();
-            }
-        }
-
-        try {
-            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
-                    .getExternalStorageDirectory().getPath()
-                    + "/SalesforceApplication/ErrorLogs/SyncUpErrorLog.txt", true));
-
-            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
-            log.write("\r\n\r\n");
-            log.close();
-
-        } catch (IOException e) {
-            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
-        }
-
-        try {
-            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
-                    .getExternalStorageDirectory().getPath()
-                    + "/SalesforceApplication/ErrorLogs/CurrentSyncUpErrorLog.txt", true));
-
-            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
-            log.write("\r\n\r\n");
-            log.close();
-
-        } catch (IOException e) {
-            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
-        }
-    }
 
     /**
      * Save locally created record back to server
@@ -280,9 +200,8 @@ public class SyncUpTarget extends SyncTarget {
         RestRequest request = RestRequest.getRequestForCreate(syncManager.apiVersion, objectType, fields);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
-        if(!response.isSuccess()) {
-            addSyncUpError(Operations.INSERT, request, response, objectType, fields);
-            saveSyncUpErrorLog(Operations.INSERT, response.toString(), objectType, fields);
+        if (!response.isSuccess()) {
+            lastError = response.asString();
         }
 
         return response.isSuccess()
@@ -301,7 +220,6 @@ public class SyncUpTarget extends SyncTarget {
     public int deleteOnServer(SyncManager syncManager, JSONObject record) throws JSONException, IOException {
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
         final String objectId = record.getString(getIdFieldName());
-
         return deleteOnServer(syncManager, objectType, objectId);
     }
 
@@ -318,9 +236,8 @@ public class SyncUpTarget extends SyncTarget {
         RestRequest request = RestRequest.getRequestForDelete(syncManager.apiVersion, objectType, objectId);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
-        if(!response.isSuccess()) {
-            addSyncUpError(Operations.DELETE, request, response, objectType, null);
-            saveSyncUpErrorLog(Operations.DELETE, response.toString(), objectType, null);
+        if (!response.isSuccess()) {
+            lastError = response.asString();
         }
 
         return response.getStatusCode();
@@ -340,7 +257,6 @@ public class SyncUpTarget extends SyncTarget {
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
         final String objectId = record.getString(getIdFieldName());
         final Map<String,Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
-
         return updateOnServer(syncManager, objectType, objectId, fields);
     }
 
@@ -358,9 +274,8 @@ public class SyncUpTarget extends SyncTarget {
         RestRequest request = RestRequest.getRequestForUpdate(syncManager.apiVersion, objectType, objectId, fields);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
-        if(!response.isSuccess()) {
-            addSyncUpError(Operations.UPDATE, request, response, objectType, fields);
-            saveSyncUpErrorLog(Operations.UPDATE, response.toString(), objectType, fields);
+        if (!response.isSuccess()) {
+            lastError = response.asString();
         }
 
         return response.getStatusCode();
@@ -375,10 +290,8 @@ public class SyncUpTarget extends SyncTarget {
     protected RecordModDate fetchLastModifiedDate(SyncManager syncManager, JSONObject record) throws JSONException, IOException {
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
         final String objectId = record.getString(getIdFieldName());
-
-        RestRequest lastModRequest = RestRequest.getRequestForRetrieve(syncManager.apiVersion, objectType, objectId, Arrays.asList(new String[]{getModificationDateFieldName()}));
+        RestRequest lastModRequest = RestRequest.getRequestForRetrieve(syncManager.apiVersion, objectType, objectId, Arrays.asList(getModificationDateFieldName()));
         RestResponse lastModResponse = syncManager.sendSyncWithSmartSyncUserAgent(lastModRequest);
-
         return new RecordModDate(
                 lastModResponse.isSuccess() ? lastModResponse.asJSONObject().getString(getModificationDateFieldName()) : null,
                 lastModResponse.getStatusCode() == HttpURLConnection.HTTP_NOT_FOUND
@@ -401,14 +314,11 @@ public class SyncUpTarget extends SyncTarget {
         if (isLocallyCreated(record)) {
             return true;
         }
-
         final RecordModDate localModDate = new RecordModDate(
                 JSONObjectHelper.optString(record, getModificationDateFieldName()),
                 isLocallyDeleted(record)
         );
-
         final RecordModDate remoteModDate = fetchLastModifiedDate(syncManager, record);
-
         return isNewerThanServer(localModDate, remoteModDate);
     }
 
@@ -421,15 +331,10 @@ public class SyncUpTarget extends SyncTarget {
      * @return
      */
     protected boolean isNewerThanServer(RecordModDate localModDate, RecordModDate remoteModDate) {
-
-        if ((localModDate.timestamp != null && remoteModDate.timestamp != null
+        return (localModDate.timestamp != null && remoteModDate.timestamp != null
                 && localModDate.timestamp.compareTo(remoteModDate.timestamp) >= 0) // we got a local and remote mod date and the local one is greater
-            || (localModDate.isDeleted && remoteModDate.isDeleted)                 // or we have a local delete and a remote delete
-            || localModDate.timestamp == null)                                     // or we don't have a local mod date
-        {
-            return true;
-        }
-        return false;
+                || (localModDate.isDeleted && remoteModDate.isDeleted)                 // or we have a local delete and a remote delete
+                || localModDate.timestamp == null;
     }
 
     /**
@@ -464,6 +369,7 @@ public class SyncUpTarget extends SyncTarget {
      * Helper class used by isNewerThanServer
      */
     protected static class RecordModDate {
+
         public final String timestamp;   // time stamp in the Constants.TIMESTAMP_FORMAT format - can be null if unknown
         public final boolean isDeleted;  // true if the record was deleted
 
@@ -471,9 +377,5 @@ public class SyncUpTarget extends SyncTarget {
             this.timestamp = timestamp;
             this.isDeleted = isDeleted;
         }
-    }
-
-    public List<SyncUpError> getSyncUpErrors() {
-        return syncUpErrors;
     }
 }
