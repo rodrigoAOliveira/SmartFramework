@@ -23,7 +23,7 @@ import java.util.List;
  * Created by Vinicius Damiati on 14-Oct-17.
  */
 
-public class ModelBuildingHelper<T> {
+public class ModelBuildingHelper<T extends SmartObject> {
     private Class<T> modelClass;
 
     public ModelBuildingHelper(Class<T> modelClass) {
