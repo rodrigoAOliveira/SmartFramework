@@ -36,20 +36,18 @@ android {
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    implementation 'com.android.support:appcompat-v7:28.+'
-    implementation 'com.android.support:support-media-compat:28.+'
-    implementation 'com.android.support:support-v4:28.+'
-    testCompile 'junit:junit:4.12'
-    androidTestCompile('com.android.support.test.espresso:espresso-core:3.0.1', {
+    testImplementation 'junit:junit:4.12'
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:3.0.1', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
 
-    implementation 'com.squareup.retrofit2:retrofit:2.5.0'
-    implementation 'com.squareup.retrofit2:converter-jackson:2.5.0'
-    compile project(path: ':libs:SalesforceSDK')
-    compile project(path: ':libs:SmartStore')
-    compile project(path: ':libs:SmartSync')
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    api 'androidx.appcompat:appcompat:1.0.0'
+    api 'com.squareup.retrofit2:retrofit:2.5.0'
+    api 'com.squareup.retrofit2:converter-jackson:2.5.0'
+    api project(path: ':libs:SalesforceSDK')
+    api project(path: ':libs:SmartStore')
+    api project(path: ':libs:SmartSync')
 }
 
 install {

@@ -26,6 +26,9 @@
  */
 package com.salesforce.androidsdk.smartsync.target;
 
+import android.os.Environment;
+import android.util.Log;
+
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
@@ -37,10 +40,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,28 +59,27 @@ import java.util.Set;
  * Target for sync up:
  * - what records to upload to server
  * - how to upload those records
- *
+ * <p>
  * During a sync up, sync manager does the following:
- *
+ * <p>
  * 1) it calls getIdsOfRecordsToSyncUp to get the ids of records to sync up
- *
+ * <p>
  * 2) for each id it does:
- *
- *   a) if calls getFromLocalStore to get the record itself
- *
- *   b) if merge mode is leave-if-changed, it calls isNewerThanServer, if that returns false, it goes to the next id
- *
- *   c) otherwise it does one of the following three operations:
- *      - calls deleteOnServer if isLocallyDeleted returns true for the record (unless it is also locally created, in which case it gets deleted locally right away)
- *        if successful or not found is returned, it calls deleteFromLocalStore to delete record locally
- *
- *      - calls createOnServer if isLocallyCreated returns true for the record
- *        if successful, it updates the id to be the id returned by the server and then calls cleanAndSaveInSmartstore to reset local flags and save the record locally
- *
- *      - calls updateOnServer if isLocallyUpdated returns true for the record
- *        if successful, it calls cleanAndSaveInSmartstore to reset local flags and save the record
- *        if not found and merge mode is overwrite, it calls createOnServer to recreate the record on the server
- *
+ * <p>
+ * a) if calls getFromLocalStore to get the record itself
+ * <p>
+ * b) if merge mode is leave-if-changed, it calls isNewerThanServer, if that returns false, it goes to the next id
+ * <p>
+ * c) otherwise it does one of the following three operations:
+ * - calls deleteOnServer if isLocallyDeleted returns true for the record (unless it is also locally created, in which case it gets deleted locally right away)
+ * if successful or not found is returned, it calls deleteFromLocalStore to delete record locally
+ * <p>
+ * - calls createOnServer if isLocallyCreated returns true for the record
+ * if successful, it updates the id to be the id returned by the server and then calls cleanAndSaveInSmartstore to reset local flags and save the record locally
+ * <p>
+ * - calls updateOnServer if isLocallyUpdated returns true for the record
+ * if successful, it calls cleanAndSaveInSmartstore to reset local flags and save the record
+ * if not found and merge mode is overwrite, it calls createOnServer to recreate the record on the server
  */
 public class SyncUpTarget extends SyncTarget {
 
@@ -83,6 +91,8 @@ public class SyncUpTarget extends SyncTarget {
     // Fields
     protected List<String> createFieldlist;
     protected List<String> updateFieldlist;
+
+    protected List<SyncUpError> syncUpErrors;
 
     // Last sync error
     protected String lastError;
@@ -116,6 +126,7 @@ public class SyncUpTarget extends SyncTarget {
      */
     public SyncUpTarget() {
         this(null, null);
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -125,10 +136,12 @@ public class SyncUpTarget extends SyncTarget {
         super();
         this.createFieldlist = createFieldlist;
         this.updateFieldlist = updateFieldlist;
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
      * Construct SyncUpTarget from json
+     *
      * @param target
      * @throws JSONException
      */
@@ -136,6 +149,7 @@ public class SyncUpTarget extends SyncTarget {
         super(target);
         this.createFieldlist = JSONObjectHelper.toList(target.optJSONArray(CREATE_FIELDLIST));
         this.updateFieldlist = JSONObjectHelper.toList(target.optJSONArray(UPDATE_FIELDLIST));
+        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
@@ -151,6 +165,7 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Save record with last error if any
+     *
      * @param syncManager
      * @param soupName
      * @param record
@@ -171,9 +186,10 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Save locally created record back to server
+     *
      * @param syncManager
      * @param record
-     * @param fieldlist fields to sync up (this.createFieldlist will be used instead if provided)
+     * @param fieldlist   fields to sync up (this.createFieldlist will be used instead if provided)
      * @return server record id or null if creation failed
      * @throws JSONException
      * @throws IOException
@@ -181,7 +197,7 @@ public class SyncUpTarget extends SyncTarget {
     public String createOnServer(SyncManager syncManager, JSONObject record, List<String> fieldlist) throws JSONException, IOException {
         fieldlist = this.createFieldlist != null ? this.createFieldlist : fieldlist;
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
-        final Map<String,Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
+        final Map<String, Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
 
         return createOnServer(syncManager, objectType, fields);
     }
@@ -189,6 +205,7 @@ public class SyncUpTarget extends SyncTarget {
     /**
      * Save locally created record back to server (original method)
      * Called by createOnServer(SyncManager syncManager, JSONObject record, List<String> fieldlist)
+     *
      * @param syncManager
      * @param objectType
      * @param fields
@@ -201,6 +218,8 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if (!response.isSuccess()) {
+            addSyncUpError(Operations.INSERT, request, response, objectType, fields);
+            saveSyncUpErrorLog(Operations.INSERT, response.toString(), objectType, fields);
             lastError = response.asString();
         }
 
@@ -211,6 +230,7 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Delete locally deleted record from server
+     *
      * @param syncManager
      * @param record
      * @return server response status code
@@ -226,6 +246,7 @@ public class SyncUpTarget extends SyncTarget {
     /**
      * Delete locally deleted record from server (original method)
      * Called by deleteOnServer(SyncManager syncManager, JSONObject record)
+     *
      * @param syncManager
      * @param objectType
      * @param objectId
@@ -237,6 +258,8 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if (!response.isSuccess()) {
+            addSyncUpError(Operations.DELETE, request, response, objectType, null);
+            saveSyncUpErrorLog(Operations.DELETE, response.toString(), objectType, null);
             lastError = response.asString();
         }
 
@@ -245,9 +268,10 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Save locally updated record back to server
+     *
      * @param syncManager
      * @param record
-     * @param fieldlist fields to sync up (this.updateFieldlist will be used instead if provided)
+     * @param fieldlist   fields to sync up (this.updateFieldlist will be used instead if provided)
      * @return true if successful
      * @throws JSONException
      * @throws IOException
@@ -256,13 +280,14 @@ public class SyncUpTarget extends SyncTarget {
         fieldlist = this.updateFieldlist != null ? this.updateFieldlist : fieldlist;
         final String objectType = (String) SmartStore.project(record, Constants.SOBJECT_TYPE);
         final String objectId = record.getString(getIdFieldName());
-        final Map<String,Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
+        final Map<String, Object> fields = buildFieldsMap(record, fieldlist, getIdFieldName(), getModificationDateFieldName());
         return updateOnServer(syncManager, objectType, objectId, fields);
     }
 
     /**
      * Save locally updated record back to server (original method)
      * Called by updateOnServer(SyncManager syncManager, JSONObject record, List<String> fieldlist)
+     *
      * @param syncManager
      * @param objectType
      * @param objectId
@@ -275,6 +300,8 @@ public class SyncUpTarget extends SyncTarget {
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
 
         if (!response.isSuccess()) {
+            addSyncUpError(Operations.UPDATE, request, response, objectType, fields);
+            saveSyncUpErrorLog(Operations.UPDATE, response.toString(), objectType, fields);
             lastError = response.asString();
         }
 
@@ -283,6 +310,7 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Fetch last modified date for a given record
+     *
      * @param syncManager
      * @param record
      * @return
@@ -301,7 +329,7 @@ public class SyncUpTarget extends SyncTarget {
     /**
      * Return true if record is more recent than corresponding record on server
      * NB: also return true if both were deleted or if local mod date is missing
-     *
+     * <p>
      * Used to decide whether a record should be synced up or not when using merge mode leave-if-changed
      *
      * @param syncManager
@@ -339,6 +367,7 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Return ids of records to sync up
+     *
      * @param syncManager
      * @param soupName
      * @return
@@ -349,6 +378,7 @@ public class SyncUpTarget extends SyncTarget {
 
     /**
      * Build map with the values for the fields in fieldlist from record
+     *
      * @param record
      * @param fieldlist
      * @param idFieldName
@@ -356,7 +386,7 @@ public class SyncUpTarget extends SyncTarget {
      * @return
      */
     protected Map<String, Object> buildFieldsMap(JSONObject record, List<String> fieldlist, String idFieldName, String modificationDateFieldName) {
-        Map<String,Object> fields = new HashMap<>();
+        Map<String, Object> fields = new HashMap<>();
         for (String fieldName : fieldlist) {
             if (!fieldName.equals(idFieldName) && !fieldName.equals(modificationDateFieldName)) {
                 fields.put(fieldName, SmartStore.project(record, fieldName));
@@ -376,6 +406,97 @@ public class SyncUpTarget extends SyncTarget {
         public RecordModDate(String timestamp, boolean isDeleted) {
             this.timestamp = timestamp;
             this.isDeleted = isDeleted;
+        }
+    }
+
+    public List<SyncUpError> getSyncUpErrors() {
+        return syncUpErrors;
+    }
+
+    private void addSyncUpError(Operations operation, RestRequest request, RestResponse response, String objectType, Map<String, Object> fields) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        String currentDateAndTime = sdf.format(new Date());
+
+        SyncUpError syncUpError = new SyncUpError();
+        syncUpError.setOperation(operation.getOperation());
+        syncUpError.setRequest(request);
+        syncUpError.setResponse(response);
+        syncUpError.setObjectType(objectType);
+        syncUpError.setFields(fields);
+        syncUpError.setDateTime(currentDateAndTime);
+
+        syncUpErrors.add(syncUpError);
+    }
+
+    private void saveSyncUpErrorLog(Operations operation, String error, String sObject, Map<String, Object> fields) {
+
+        String _operation = "";
+        if (operation == Operations.INSERT) {
+            _operation = "INSERT";
+        } else if (operation == Operations.UPDATE) {
+            _operation = "UPDATE";
+        } else if (operation == Operations.DELETE) {
+            _operation = "DELETE";
+        }
+
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        String currentDateAndTime = sdf.format(new Date());
+
+        File directory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication");
+        File subDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication/ErrorLogs");
+
+        if (!directory.exists()) {
+            directory.mkdir();
+
+            if (!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        } else {
+            if (!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/SyncUpErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
+            log.write("\r\n\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/CurrentSyncUpErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " ||-|| " + _operation + " ||-|| " + sObject + ": " + error + " ||-|| Request fields: " + fields);
+            log.write("\r\n\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            Log.e(SyncUpTarget.class.getSimpleName(), e.getMessage(), e);
+        }
+    }
+
+    private enum Operations {
+        INSERT("INSERT"),
+        UPDATE("UPDATE"),
+        DELETE("DELETE");
+
+        final String operation;
+
+        Operations(String operation) {
+            this.operation = operation;
+        }
+
+        public String getOperation() {
+            return operation;
         }
     }
 }

@@ -39,6 +39,7 @@ import com.salesforce.androidsdk.smartstore.store.SmartStore.SmartStoreException
 import com.salesforce.androidsdk.smartsync.app.Features;
 import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.smartsync.target.AdvancedSyncUpTarget;
+import com.salesforce.androidsdk.smartsync.target.SyncDownError;
 import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
 import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
 import com.salesforce.androidsdk.smartsync.util.SmartSyncLogger;
@@ -53,12 +54,16 @@ import org.json.JSONObject;
 
 import java.io.IOException;
 import java.net.HttpURLConnection;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+
+import static com.salesforce.androidsdk.smartsync.util.SyncState.Type.syncDown;
 
 /**
  * Sync Manager
@@ -362,6 +367,19 @@ public class SyncManager {
                 } catch (Exception e) {
                     SmartSyncLogger.e(TAG, "Exception thrown in runSync", e);
 
+                    if(e.getMessage().toLowerCase().contains("timeout") && sync.getType() == syncDown) {
+                        SyncDownTarget target = (SyncDownTarget) sync.getTarget();
+
+                        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+                        String currentDateAndTime = sdf.format(new Date());
+
+                        SyncDownError syncDownError = new SyncDownError();
+                        syncDownError.setCustomErrorMessage("Timeout");
+                        syncDownError.setDateTime(currentDateAndTime);
+
+                        target.getSyncDownErrors().add(syncDownError);
+                    }
+
                     //Set error message to sync state
                     sync.setError(e.getMessage());
                     // Update status to failed
@@ -443,7 +461,7 @@ public class SyncManager {
         if (sync == null) {
             throw new SmartSyncException("Cannot run cleanResyncGhosts:" + syncId + ": no sync found");
         }
-        if (sync.getType() != SyncState.Type.syncDown) {
+        if (sync.getType() != syncDown) {
             throw new SmartSyncException("Cannot run cleanResyncGhosts:" + syncId + ": wrong type:" + sync.getType());
         }
         SmartSyncLogger.d(TAG, "cleanResyncGhosts called", sync);

@@ -50,8 +50,9 @@ import okhttp3.TlsVersion;
 public class HttpAccess {
 
     // Timeouts.
-    public static final int CONNECT_TIMEOUT = 60;
-    public static final int READ_TIMEOUT = 20;
+    public static final int CONNECT_TIMEOUT = 300;
+    public static final int READ_TIMEOUT = 180;
+    public static final int WRITE_TIMEOUT = 240;
 
     // User agent header name.
 	private static final String USER_AGENT = "User-Agent";
@@ -105,6 +106,7 @@ public class HttpAccess {
                 .connectionSpecs(Collections.singletonList(connectionSpec))
                 .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                 .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
+                .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
                 .addNetworkInterceptor(new UserAgentInterceptor());
         return builder;
     }

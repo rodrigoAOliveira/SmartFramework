@@ -26,7 +26,9 @@
  */
 package com.salesforce.androidsdk.smartsync.target;
 
+import android.os.Environment;
 import android.text.TextUtils;
+import android.util.Log;
 
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
@@ -38,7 +40,11 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -108,6 +114,52 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
 		return target;
 	}
 
+    private void saveSyncDownErrorLog(String query, RestRequest request, RestResponse response) {
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+        String currentDateAndTime = sdf.format(new Date());
+
+        File directory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication");
+        File subDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication/ErrorLogs");
+
+        if(!directory.exists()) {
+            directory.mkdir();
+
+            if(!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        } else {
+            if(!subDirectory.exists()) {
+                subDirectory.mkdir();
+            }
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/SyncDownErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " - Request: " + request.toString() + " - Response: " + response.toString() + " - Query: " + query);
+            log.write("\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            Log.e(SoqlSyncDownTarget.class.getSimpleName(), e.getMessage(), e);
+        }
+
+        try {
+            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
+                    .getExternalStorageDirectory().getPath()
+                    + "/SalesforceApplication/ErrorLogs/CurrentSyncDownErrorLog.txt", true));
+
+            log.write(currentDateAndTime + " - Request: " + request.toString() + " - Response: " + response.toString() + " - Query: " + query);
+            log.write("\r\n");
+            log.close();
+
+        } catch (IOException e) {
+            Log.e(SoqlSyncDownTarget.class.getSimpleName(), e.getMessage(), e);
+        }
+    }
+
     @Override
     public JSONArray startFetch(SyncManager syncManager, long maxTimeStamp) throws IOException, JSONException {
         return startFetch(syncManager, getQuery(maxTimeStamp));
@@ -116,6 +168,22 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
     protected JSONArray startFetch(SyncManager syncManager, String query) throws IOException, JSONException {
         RestRequest request = RestRequest.getRequestForQuery(syncManager.apiVersion, query);
         RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+
+        if(!response.isSuccess()) {
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
+            String currentDateAndTime = sdf.format(new Date());
+
+            SyncDownError syncDownError = new SyncDownError();
+            syncDownError.setQuery(query);
+            syncDownError.setRequest(request);
+            syncDownError.setResponse(response);
+            syncDownError.setDateTime(currentDateAndTime);
+
+            syncDownErrors.add(syncDownError);
+
+            saveSyncDownErrorLog(query, request, response);
+        }
+
         JSONObject responseJson = getResponseJson(response);
         JSONArray records = getRecordsFromResponseJson(responseJson);
 
