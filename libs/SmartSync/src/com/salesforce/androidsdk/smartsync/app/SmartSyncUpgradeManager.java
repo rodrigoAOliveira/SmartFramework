@@ -26,8 +26,6 @@
  */
 package com.salesforce.androidsdk.smartsync.app;
 
-import android.text.TextUtils;
-
 import com.salesforce.androidsdk.smartstore.app.SmartStoreUpgradeManager;
 
 /**
@@ -62,7 +60,6 @@ public class SmartSyncUpgradeManager extends SmartStoreUpgradeManager {
         upgradeSObject();
     }
 
-
     /**
      * Upgrades smart sync data from existing client version to the current version.
      */
@@ -74,14 +71,6 @@ public class SmartSyncUpgradeManager extends SmartStoreUpgradeManager {
 
         // Update shared preference file to reflect the latest version.
         writeCurVersion(SMART_SYNC_KEY, SmartSyncSDKManager.SDK_VERSION);
-
-        /*
-         * We need to update this variable, since the app will not
-         * have this value set for a first time install.
-         */
-        if (TextUtils.isEmpty(installedVersion)) {
-            installedVersion = getInstalledSobjectVersion();
-        }
     }
 
     /**

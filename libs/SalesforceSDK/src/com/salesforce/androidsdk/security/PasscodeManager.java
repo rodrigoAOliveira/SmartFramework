@@ -37,7 +37,6 @@ import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.analytics.EventBuilderHelper;
 import com.salesforce.androidsdk.analytics.security.Encryptor;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
-import com.salesforce.androidsdk.app.UUIDManager;
 import com.salesforce.androidsdk.util.EventsObservable;
 import com.salesforce.androidsdk.util.EventsObservable.EventType;
 
@@ -56,51 +55,43 @@ public class PasscodeManager  {
 	private static final String VKEY = "vkey";
 	private static final String VSUFFIX = "vsuffix";
 	private static final String VPREFIX = "vprefix";
-	private static final String EKEY = "ekey";
-	private static final String ESUFFIX = "esuffix";
-	private static final String EPREFIX = "eprefix";
-    private static final String TAG = "PasscodeManager";
+	private static final String TAG = "PasscodeManager";
 	
     // Default min passcode length
     public static final int MIN_PASSCODE_LENGTH = 4;
 
     // Key in preference for the passcode
-    private static final String KEY_PASSCODE ="passcode";
+    protected static final String KEY_PASSCODE ="passcode";
 
     // Private preference where we stored the passcode (hashed)
-    private static final String PASSCODE_PREF_NAME = "user";
+    protected static final String PASSCODE_PREF_NAME = "user";
 
     // Private preference where we stored the org settings.
-    private static final String MOBILE_POLICY_PREF = "mobile_policy";
+    protected static final String MOBILE_POLICY_PREF = "mobile_policy";
 
     // Key in preference for the access timeout.
-    private static final String KEY_TIMEOUT = "access_timeout";
+    protected static final String KEY_TIMEOUT = "access_timeout";
 
     // Key in preference for the passcode length.
-    private static final String KEY_PASSCODE_LENGTH = "passcode_length";
+    protected static final String KEY_PASSCODE_LENGTH = "passcode_length";
+
+    // Key in preference to indicate passcode change is required.
+    protected static final String KEY_PASSCODE_CHANGE_REQUIRED= "passcode_change_required";
+
+    // Key in preference for failed attempts
+    protected static final String KEY_FAILED_ATTEMPTS = "failed_attempts";
 
     // Request code used to start passcode activity
     public static final int PASSCODE_REQUEST_CODE = 777;
 
-    // Key used to specify that a longer passcode needs to be created.
-    public static final String CHANGE_PASSCODE_KEY = "change_passcode";
-
-    // Key in preference for failed attempts
-    private static final String FAILED_ATTEMPTS = "failed_attempts";
-
-    // this is a hash of the passcode to be used as part of the key to encrypt/decrypt oauth tokens
-    // It's using a different salt/key than the one used to verify the entry
-    private String passcodeHash;
-
     // Misc
     private HashConfig verificationHashConfig;
-    private HashConfig encryptionHashConfig;
-    private Activity frontActivity;
     private Handler handler;
     private long lastActivity;
-    private boolean locked;
+    boolean locked;
     private int timeoutMs;
     private int minPasscodeLength;
+    private boolean passcodeChangeRequired;
     private LockChecker lockChecker;
 
     /**
@@ -109,25 +100,41 @@ public class PasscodeManager  {
      * @param ctx Context.
      */
    public PasscodeManager(Context ctx) {
-	   this(ctx,
-		   new HashConfig(UUIDManager.getUuId(VPREFIX),
-				   UUIDManager.getUuId(VSUFFIX), UUIDManager.getUuId(VKEY)),
-		   new HashConfig(UUIDManager.getUuId(EPREFIX),
-				   UUIDManager.getUuId(ESUFFIX), UUIDManager.getUuId(EKEY)));
+	   this(ctx, new HashConfig(SalesforceKeyGenerator.getUniqueId(VPREFIX),
+                   SalesforceKeyGenerator.getUniqueId(VSUFFIX),
+                   SalesforceKeyGenerator.getUniqueId(VKEY)));
    }
 
-   public PasscodeManager(Context ctx, HashConfig verificationHashConfig,
-		   HashConfig encryptionHashConfig) {
+   public PasscodeManager(Context ctx, HashConfig verificationHashConfig) {
        this.minPasscodeLength = MIN_PASSCODE_LENGTH;
        this.lastActivity = now();
        this.verificationHashConfig = verificationHashConfig;
-       this.encryptionHashConfig = encryptionHashConfig;
        readMobilePolicy(ctx);
 
        // Locked at app startup if you're authenticated.
        this.locked = true;
        lockChecker = new LockChecker(); 
    }
+
+    /**
+     * Returns true if a passcode change is required.
+     *
+     * @return true if passcode change required.
+     */
+    public boolean isPasscodeChangeRequired() {
+        return passcodeChangeRequired;
+    }
+
+
+    /**
+     * Set passcode change required flag to the passed value
+     * @param ctx
+     * @param passcodeChangeRequired value to set passcode change required flag to
+     */
+    public void setPasscodeChangeRequired(Context ctx, boolean passcodeChangeRequired) {
+        this.passcodeChangeRequired = passcodeChangeRequired;
+        storeMobilePolicy(ctx);
+    }
 
    /**
     * Returns the timeout value for the specified account.
@@ -195,6 +202,7 @@ public class PasscodeManager  {
             Editor e = sp.edit();
             e.putInt(KEY_TIMEOUT, timeoutMs);
             e.putInt(KEY_PASSCODE_LENGTH, minPasscodeLength);
+            e.putBoolean(KEY_PASSCODE_CHANGE_REQUIRED, passcodeChangeRequired);
             e.commit();
         }
     }
@@ -213,11 +221,13 @@ public class PasscodeManager  {
             if (!sp.contains(KEY_TIMEOUT) || !sp.contains(KEY_PASSCODE_LENGTH)) {
                 timeoutMs = 0;
                 minPasscodeLength = MIN_PASSCODE_LENGTH;
+                passcodeChangeRequired = false;
                 storeMobilePolicy(context);
                 return;
             }
             timeoutMs = sp.getInt(KEY_TIMEOUT, 0);
             minPasscodeLength = sp.getInt(KEY_PASSCODE_LENGTH, MIN_PASSCODE_LENGTH);
+            passcodeChangeRequired = sp.getBoolean(KEY_PASSCODE_CHANGE_REQUIRED, false);
         }
     }
 
@@ -237,15 +247,15 @@ public class PasscodeManager  {
     	}
     	lastActivity = now();
         locked = true;
-        passcodeHash = null;
         SharedPreferences sp = ctx.getSharedPreferences(PASSCODE_PREF_NAME,
         		Context.MODE_PRIVATE);
         Editor e = sp.edit();
         e.remove(KEY_PASSCODE);
-        e.remove(FAILED_ATTEMPTS);
+        e.remove(KEY_FAILED_ATTEMPTS);
         e.commit();
         timeoutMs = 0;
         minPasscodeLength = MIN_PASSCODE_LENGTH;
+        passcodeChangeRequired = false;
         storeMobilePolicy(ctx);
         handler = null;
     }
@@ -304,7 +314,7 @@ public class PasscodeManager  {
      * @return true if passcode matches the one stored (hashed) in private preference
      */
     public boolean check(Context ctx, String passcode) {
-        SharedPreferences sp = ctx.getSharedPreferences(PASSCODE_PREF_NAME, Context.MODE_PRIVATE);
+        final SharedPreferences sp = ctx.getSharedPreferences(PASSCODE_PREF_NAME, Context.MODE_PRIVATE);
         String hashedPasscode = sp.getString(KEY_PASSCODE, null);
         hashedPasscode = removeNewLine(hashedPasscode);
         if (hashedPasscode != null) {
@@ -341,6 +351,7 @@ public class PasscodeManager  {
         Editor e = sp.edit();
         e.putString(KEY_PASSCODE, hashForVerification(passcode));
         e.commit();
+        setPasscodeChangeRequired(ctx,false);
     }
 
     /**
@@ -357,32 +368,14 @@ public class PasscodeManager  {
      */
     public int getFailedPasscodeAttempts() {
         SharedPreferences sp = SalesforceSDKManager.getInstance().getAppContext().getSharedPreferences(PASSCODE_PREF_NAME, Context.MODE_PRIVATE);
-        return sp.getInt(FAILED_ATTEMPTS, 0);
+        return sp.getInt(KEY_FAILED_ATTEMPTS, 0);
     }
 
     private void setFailedPasscodeAttempts(int failedPasscodeAttempts) {
         SharedPreferences sp = SalesforceSDKManager.getInstance().getAppContext().getSharedPreferences(PASSCODE_PREF_NAME, Context.MODE_PRIVATE);
         Editor e = sp.edit();
-        e.putInt(FAILED_ATTEMPTS, failedPasscodeAttempts);
+        e.putInt(KEY_FAILED_ATTEMPTS, failedPasscodeAttempts);
         e.commit();
-    }
-
-    /**
-     * @return a hash of the passcode that can be used for encrypting oauth tokens
-     */
-    public String getPasscodeHash() {
-        return passcodeHash;
-    }
-
-    /**
-     * Sets the passcode hash, used ONLY in tests.
-     *
-     * @param passcodeHash Passcode hash.
-     */
-    public void setPasscodeHash(String passcodeHash) {
-    	if (SalesforceSDKManager.getInstance().getIsTestRun()) {
-        	this.passcodeHash = passcodeHash;
-    	}
     }
 
     /**
@@ -396,18 +389,16 @@ public class PasscodeManager  {
      * @param ctx
      */
     public void lock(Context ctx) {
-        showLockActivity(ctx, false);
+        showLockActivity(ctx);
     }
 
     /**
-     * @param newFrontActivity
+     * @param frontActivity
      * @param registerActivity
      * @return
      */
-    public boolean lockIfNeeded(Activity newFrontActivity, boolean registerActivity) {
-        if (newFrontActivity != null)
-            frontActivity = newFrontActivity;
-        if (isEnabled() && (isLocked() || shouldLock())) {
+    public boolean lockIfNeeded(Activity frontActivity, boolean registerActivity) {
+        if (isEnabled() && (isLocked() || shouldLock() || passcodeChangeRequired)) {
             lock(frontActivity);
             return true;
         } else {
@@ -415,15 +406,6 @@ public class PasscodeManager  {
             return false;
         }
     }
-
-    /**
-     * @param a
-     */
-    public void nolongerFrontActivity(Activity a) {
-        if (frontActivity == a)
-            frontActivity = null;
-    }
-
 
     /**
      * To be called by passcode protected activity when being paused
@@ -478,14 +460,17 @@ public class PasscodeManager  {
          * no passcode to passcode, which will trigger the passcode creation flow.
          */
         if (timeoutMs == 0 || (timeoutMs > 0 && newTimeout > 0)) {
-            timeoutMs = newTimeout;
+
+            // Updates timeout only if the new timeout is smaller than the old one.
+            if (timeoutMs == 0 || timeoutMs > newTimeout) {
+                timeoutMs = newTimeout;
+            }
             storeMobilePolicy(SalesforceSDKManager.getInstance().getAppContext());
             return;
         }
 
         // Passcode to no passcode.
         timeoutMs = newTimeout;
-        SalesforceSDKManager.getInstance().changePasscode(passcodeHash, null);
         reset(SalesforceSDKManager.getInstance().getAppContext());
     }
 
@@ -497,63 +482,45 @@ public class PasscodeManager  {
         return minPasscodeLength;
     }
 
-    public boolean setMinPasscodeLength(int minPasscodeLength) {
-        return setMinPasscodeLength(SalesforceSDKManager.getInstance().getAppContext(), minPasscodeLength);
-    }
-
     /**
      * @param ctx
      * @param minPasscodeLength
-     * @return true if a passcode change is required and the app is entering a locked state.
      */
-    public boolean setMinPasscodeLength(Context ctx, int minPasscodeLength) {
-        boolean passcodeChangeRequired = false;
+    public void setMinPasscodeLength(Context ctx, int minPasscodeLength) {
     	if (minPasscodeLength > this.minPasscodeLength) {
-            this.minPasscodeLength = minPasscodeLength;
-
-            /*
-             * This needs to happen only if a passcode exists, in order to trigger
-             * the 'Change Passcode' flow. Otherwise, we simply need to update
-             * the minimum length in memory. The 'Create Passcode' flow is
-             * triggered later from OAuthWebviewHelper.
-             */
             if (hasStoredPasscode(ctx)) {
-                showLockActivity(ctx, true);
-                passcodeChangeRequired = true;
+                this.passcodeChangeRequired = true;
             }
     	}
         this.minPasscodeLength = minPasscodeLength;
         storeMobilePolicy(ctx);
-        return passcodeChangeRequired;
     }
+
+    /**
+     * @return true if time elapsed since the last user activity in the app exceeds the timeoutMs
+     */
 
     public boolean shouldLock() {
         return timeoutMs > 0 && now() >= (lastActivity + timeoutMs);
     }
 
-    public void showLockActivity(Context ctx, boolean changePasscodeFlow) {
+    public void showLockActivity(Context ctx) {
         locked = true;
         if (ctx != null) {
-        final Intent i = new Intent(ctx, SalesforceSDKManager.getInstance().getPasscodeActivity());
-        i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
-        i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
-        i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
-        if (ctx == SalesforceSDKManager.getInstance().getAppContext()) {
-            i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            final Intent i = new Intent(ctx, SalesforceSDKManager.getInstance().getPasscodeActivity());
+            i.addFlags(Intent.FLAG_ACTIVITY_SINGLE_TOP);
+            i.addFlags(Intent.FLAG_ACTIVITY_NO_HISTORY);
+            i.addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT);
+            if (ctx == SalesforceSDKManager.getInstance().getAppContext()) {
+                i.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+            }
+            if (ctx instanceof Activity) {
+                ((Activity) ctx).startActivityForResult(i, PASSCODE_REQUEST_CODE);
+            } else {
+                ctx.startActivity(i);
+            }
         }
-        i.putExtra(CHANGE_PASSCODE_KEY, changePasscodeFlow);
-        if (ctx instanceof Activity) {
-            ((Activity) ctx).startActivityForResult(i, PASSCODE_REQUEST_CODE);
-        } else {
-            ctx.startActivity(i);
-        }
-    }
         EventsObservable.get().notifyEvent(EventType.AppLocked);
-    }
-
-    public void unlock(String passcode) {
-        passcodeHash = hashForEncryption(passcode);
-        unlock();
     }
 
     /**
@@ -579,11 +546,7 @@ public class PasscodeManager  {
     public String hashForVerification(String passcode) {
     	return hash(passcode, verificationHashConfig);
     }
-    
-    public String hashForEncryption(String passcode) {
-    	return hash(passcode, encryptionHashConfig);
-    }
-    
+
     private String hash(String passcode, HashConfig hashConfig) {
         return Encryptor.hash(hashConfig.prefix + passcode + hashConfig.suffix, hashConfig.key);
     }
@@ -610,9 +573,11 @@ public class PasscodeManager  {
      * Key for hashing and salts to be preprended and appended to data to increase entropy.
      */
     public static class HashConfig {
+
         public final String prefix;
         public final String suffix;
         public final String key;
+
         public HashConfig(String prefix, String suffix, String key) {
             this.prefix = prefix;
             this.suffix = suffix;
@@ -631,10 +596,7 @@ public class PasscodeManager  {
 
 		@Override
 		public boolean accept(File dir, String filename) {
-			if (filename != null && filename.startsWith(PASSCODE_FILE_PREFIX)) {
-				return true;
-			}
-			return false;
+		    return (filename != null && filename.startsWith(PASSCODE_FILE_PREFIX));
 		}
     }
 }

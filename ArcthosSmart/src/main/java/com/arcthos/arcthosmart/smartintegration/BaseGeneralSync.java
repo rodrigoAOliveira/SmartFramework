@@ -97,7 +97,7 @@ public abstract class BaseGeneralSync {
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
@@ -105,7 +105,7 @@ public abstract class BaseGeneralSync {
     }
 
     protected void syncFullObject(Class<? extends SmartObject> model) {
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = getCustomWhere(model);
 
         if (where.startsWith("AND ")) {
@@ -125,7 +125,7 @@ public abstract class BaseGeneralSync {
         String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);
 
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
@@ -136,7 +136,7 @@ public abstract class BaseGeneralSync {
         String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);
 
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
@@ -149,7 +149,7 @@ public abstract class BaseGeneralSync {
 
         final Class<? extends SmartObject> model = models.get(0);
 
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, true);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, true);
         String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
         sObjectSyncher.setWhere(where);
 
@@ -240,5 +240,4 @@ public abstract class BaseGeneralSync {
             }
         }
     }
-
 }

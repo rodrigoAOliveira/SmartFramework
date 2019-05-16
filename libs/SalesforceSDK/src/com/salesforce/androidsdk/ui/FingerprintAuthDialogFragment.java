@@ -26,10 +26,6 @@
  */
 package com.salesforce.androidsdk.ui;
 
-import javax.crypto.Cipher;
-
-import com.salesforce.androidsdk.app.SalesforceSDKManager;
-
 import android.Manifest.permission;
 import android.annotation.TargetApi;
 import android.app.Dialog;
@@ -51,6 +47,10 @@ import android.view.Window;
 import android.widget.Button;
 import android.widget.TextView;
 
+import com.salesforce.androidsdk.R;
+
+import javax.crypto.Cipher;
+
 /**
  * A dialog which uses Fingerprint APIs to authenticate the user, and falls back to password
  * authentication if fingerprint is not available.
@@ -58,31 +58,34 @@ import android.widget.TextView;
 @TargetApi(VERSION_CODES.M)
 public class FingerprintAuthDialogFragment extends DialogFragment {
 
-    private Button mCancelButton;
     private TextView mStatusText;
-    private SalesforceR salesforceR;
-    private Cipher mCipher;
     private PasscodeActivity mContext;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         // Do not create a new Fragment when the Activity is re-created such as orientation changes.
         setRetainInstance(true);
         setStyle(DialogFragment.STYLE_NORMAL, android.R.style.Theme_Material_Light_Dialog);
-        salesforceR = SalesforceSDKManager.getInstance().getSalesforceR();
     }
 
     @Override
     public void onResume() {
         super.onResume();
+
+        /*
+         * TODO: Remove this check once minAPI >= 23.
+         */
         if (VERSION.SDK_INT >= VERSION_CODES.M) {
             FingerprintManager fingerprintManager = (FingerprintManager) mContext.getSystemService(Context.FINGERPRINT_SERVICE);
             if (mContext.checkSelfPermission(permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
-                //If we got so far, we already got the permission in the PasscodeActivity. This is an OS mandated check.
+
+                // If we got so far, we already got the permission in the PasscodeActivity. This is an OS mandated check.
                 return;
             }
-            fingerprintManager.authenticate(new CryptoObject(mCipher), null, 0, new AuthenticationCallback() {
+            fingerprintManager.authenticate(new CryptoObject((Cipher) null), null, 0, new AuthenticationCallback() {
+
                 @Override
                 public void onAuthenticationError(int errorCode, CharSequence errString) {
                     super.onAuthenticationError(errorCode, errString);
@@ -92,10 +95,12 @@ public class FingerprintAuthDialogFragment extends DialogFragment {
                 public void onAuthenticationSucceeded(AuthenticationResult result) {
                     super.onAuthenticationSucceeded(result);
                     if (mStatusText != null) {
-                        mStatusText.setText(salesforceR.idFingerprintSuccessString());
+                        mStatusText.setText(R.string.sf__fingerprint_success);
                         mStatusText.setTextColor(Color.GREEN);
                     }
-                    FingerprintAuthDialogFragment.this.dismiss();
+                    if (FingerprintAuthDialogFragment.this.getFragmentManager() != null) {
+                        FingerprintAuthDialogFragment.this.dismiss();
+                    }
                     mContext.unlockViaFingerprintScan();
                 }
 
@@ -103,7 +108,7 @@ public class FingerprintAuthDialogFragment extends DialogFragment {
                 public void onAuthenticationFailed() {
                     super.onAuthenticationFailed();
                     if (mStatusText != null) {
-                        mStatusText.setText(salesforceR.idFingerprintFailureString());
+                        mStatusText.setText(R.string.sf__fingerprint_failed);
                         mStatusText.setTextColor(Color.RED);
                     }
                 }
@@ -122,8 +127,7 @@ public class FingerprintAuthDialogFragment extends DialogFragment {
 
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState) {
-        Dialog dialog =  super.onCreateDialog(savedInstanceState);
-        //Hide the title from the dialog
+        final Dialog dialog =  super.onCreateDialog(savedInstanceState);
         dialog.getWindow().requestFeature(Window.FEATURE_NO_TITLE);
         return dialog;
     }
@@ -131,15 +135,16 @@ public class FingerprintAuthDialogFragment extends DialogFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
             Bundle savedInstanceState) {
-        View v = inflater.inflate(salesforceR.idFingerprintDialog(), container, false);
-        mCancelButton = (Button) v.findViewById(salesforceR.idFingerprintCancelButton());
-        mCancelButton.setOnClickListener(new View.OnClickListener() {
+        final View v = inflater.inflate(R.layout.sf__fingerprint_dialog, container, false);
+        final Button cancelButton = v.findViewById(R.id.sf__use_password_button);
+        cancelButton.setOnClickListener(new View.OnClickListener() {
+
             @Override
             public void onClick(View view) {
                 dismiss();
             }
         });
-        mStatusText = (TextView) v.findViewById(salesforceR.idFingerprintStatusText());
+        mStatusText = v.findViewById(R.id.sf__fingerprint_status);
         return v;
     }
 

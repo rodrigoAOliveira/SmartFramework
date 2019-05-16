@@ -37,7 +37,7 @@ import com.salesforce.androidsdk.app.SalesforceSDKManager;
  */
 public class ApiVersionStrings {
 
-    public static final String VERSION_NUMBER = "v39.0";
+    public static final String VERSION_NUMBER = "v42.0";
     public static final String API_PREFIX = "/services/data/";
 
     public static String getBasePath() {
@@ -46,10 +46,6 @@ public class ApiVersionStrings {
 
     public static String getBaseChatterPath() {
         return getBasePath() + "/chatter/";
-    }
-
-    public static String getBaseConnectPath() {
-        return getBasePath() + "/connect/";
     }
 
     public static String getBaseSObjectPath() {

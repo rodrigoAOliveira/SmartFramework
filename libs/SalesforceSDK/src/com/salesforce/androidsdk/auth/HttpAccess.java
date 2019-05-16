@@ -29,13 +29,10 @@ package com.salesforce.androidsdk.auth;
 import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.Build;
 
-import com.salesforce.androidsdk.util.SalesforceSDKLogger;
+import com.salesforce.androidsdk.app.SalesforceSDKManager;
 
 import java.io.IOException;
-import java.security.KeyManagementException;
-import java.security.NoSuchAlgorithmException;
 import java.util.Collections;
 import java.util.concurrent.TimeUnit;
 
@@ -59,7 +56,6 @@ public class HttpAccess {
 
     // User agent header name.
 	private static final String USER_AGENT = "User-Agent";
-    private static final String TAG = "HttpAccess";
 
     private String userAgent;
     private OkHttpClient okHttpClient;
@@ -73,9 +69,9 @@ public class HttpAccess {
     /**
      * Initializes HttpAccess. Should be called from the application.
      */
-    public static void init(Context app, String userAgent) {
+    public static void init(Context app) {
         assert DEFAULT == null : "HttpAccess.init should be called once per process";
-        DEFAULT = new HttpAccess(app, userAgent);
+        DEFAULT = new HttpAccess(app, null /* user agent will be calculated at request time */);
     }
 
     /**
@@ -106,27 +102,12 @@ public class HttpAccess {
         ConnectionSpec connectionSpec = new ConnectionSpec.Builder(ConnectionSpec.MODERN_TLS)
                 .tlsVersions(TlsVersion.TLS_1_1, TlsVersion.TLS_1_2)
                 .build();
-
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
                 .connectionSpecs(Collections.singletonList(connectionSpec))
                 .connectTimeout(CONNECT_TIMEOUT, TimeUnit.SECONDS)
                 .readTimeout(READ_TIMEOUT, TimeUnit.SECONDS)
                 .writeTimeout(WRITE_TIMEOUT, TimeUnit.SECONDS)
-                .addNetworkInterceptor(new UserAgentInterceptor(userAgent));
-
-        /*
-         * FIXME: Remove this piece of code once minApi >= Lollipop.
-         */
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-            try {
-                builder.sslSocketFactory(SalesforceTLSSocketFactory.getInstance());
-            } catch (KeyManagementException e) {
-                SalesforceSDKLogger.e(TAG, "Exception thrown while setting SSL socket factory", e);
-            } catch (NoSuchAlgorithmException ne) {
-                SalesforceSDKLogger.e(TAG, "Exception thrown while setting SSL socket factory", ne);
-            }
-        }
-
+                .addNetworkInterceptor(new UserAgentInterceptor());
         return builder;
     }
 
@@ -183,7 +164,11 @@ public class HttpAccess {
      */
     public static class UserAgentInterceptor implements Interceptor {
 
-        private final String userAgent;
+        private String userAgent;
+
+        public UserAgentInterceptor() {
+            // User this constructor to have the user agent computed for each call
+        }
 
         public UserAgentInterceptor(String userAgent) {
             this.userAgent = userAgent;
@@ -193,7 +178,7 @@ public class HttpAccess {
         public Response intercept(Chain chain) throws IOException {
             Request originalRequest = chain.request();
             Request requestWithUserAgent = originalRequest.newBuilder()
-                    .header(HttpAccess.USER_AGENT, userAgent)
+                    .header(HttpAccess.USER_AGENT, userAgent == null ? SalesforceSDKManager.getInstance().getUserAgent() : userAgent)
                     .build();
             return chain.proceed(requestWithUserAgent);
         }

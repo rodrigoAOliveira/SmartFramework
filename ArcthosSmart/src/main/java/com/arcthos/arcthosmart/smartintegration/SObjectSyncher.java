@@ -1,6 +1,6 @@
 package com.arcthos.arcthosmart.smartintegration;
 
-import android.content.Context;
+import android.content.res.Resources;
 import android.util.Log;
 
 import com.arcthos.arcthosmart.annotations.DestinationLocalParent;
@@ -45,7 +45,7 @@ import java.util.TimeZone;
  * Created by Vinicius Damiati on 11-Oct-17.
  */
 
-public class SObjectSyncher<T extends SmartObject>{
+public class SObjectSyncher<T extends SmartObject> {
 
     public static final Integer LIMIT = 50000;
 
@@ -57,23 +57,24 @@ public class SObjectSyncher<T extends SmartObject>{
     private String where;
     private long syncId = -1;
     private final SyncCallback syncCallback;
-    private final Context context;
+    private final Resources resources;
     private final boolean chainedSync;
 
-    public SObjectSyncher(final Class<T> type, final Context context, final SyncCallback syncCallback, boolean chainedSync) {
+    public SObjectSyncher(final Class<T> type, final Resources resources, final SyncCallback syncCallback, boolean chainedSync) {
         this.currentUser = SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
         this.smartStore = SmartSyncSDKManager.getInstance().getSmartStore(currentUser);
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
         this.syncCallback = syncCallback;
-        this.context = context;
+        this.resources = resources;
         this.chainedSync = chainedSync;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
+        SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentAccount();
     }
 
     private String getDefaultWhere() {
-        Locale locale = context.getResources().getConfiguration().locale;
+        Locale locale = resources.getConfiguration().locale;
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", locale);
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -93,7 +94,7 @@ public class SObjectSyncher<T extends SmartObject>{
     }
 
     public boolean hasSoup() {
-        if(smartStore.hasSoup(modelBuildingHelper.getSObjectName())) {
+        if (smartStore.hasSoup(modelBuildingHelper.getSObjectName())) {
             return true;
         } else {
             return false;
@@ -109,7 +110,6 @@ public class SObjectSyncher<T extends SmartObject>{
     }
 
 
-
     private synchronized void syncUp(final boolean doSyncdownAfter) {
         syncUp(doSyncdownAfter, null, null);
     }
@@ -120,7 +120,7 @@ public class SObjectSyncher<T extends SmartObject>{
 
     private synchronized void syncUp(final boolean doSyncdownAfter, final String id, final ChainedCallback chainedCallback) {
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
-        if(chainedSync) {
+        if (chainedSync) {
             try {
                 updateChainedObject();
             } catch (JSONException e) {
@@ -160,7 +160,7 @@ public class SObjectSyncher<T extends SmartObject>{
                                 }
 
                                 syncDown(chainedCallback);
-                            } else if(SyncState.Status.DONE.equals(sync.getStatus())) {
+                            } else if (SyncState.Status.DONE.equals(sync.getStatus())) {
                                 syncCallback.onUpSuccess(sync, sync.getStatus(), sync.getSoupName());
                             } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
                                 syncCallback.onUpFailure(sync, finalObject);
@@ -188,10 +188,10 @@ public class SObjectSyncher<T extends SmartObject>{
             public void onUpdate(SyncState sync) {
                 if (SyncState.Status.DONE.equals(sync.getStatus())) {
                     syncCallback.onDownSuccess(sync, sync.getTotalSize(), sync.getSoupName());
-                    if(chainedCallback != null) chainedCallback.onFinish();
-                } else if(SyncState.Status.FAILED.equals(sync.getStatus())) {
+                    if (chainedCallback != null) chainedCallback.onFinish();
+                } else if (SyncState.Status.FAILED.equals(sync.getStatus())) {
                     syncCallback.onDownFailure(sync);
-                    if(chainedCallback != null) chainedCallback.onFinish();
+                    if (chainedCallback != null) chainedCallback.onFinish();
                 }
             }
         };
@@ -229,74 +229,75 @@ public class SObjectSyncher<T extends SmartObject>{
         Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName = new HashMap<>();
         Map<String, String> destinationBySource = getDestinationBySource(sourceClassBySourceFieldName);
 
-        for(int i = 0; i < models.length(); i++) {
+        for (int i = 0; i < models.length(); i++) {
             boolean hasToUpdate = false;
-            JSONObject model = (JSONObject)((JSONArray)models.get(i)).get(0);
+            JSONObject model = (JSONObject) ((JSONArray) models.get(i)).get(0);
 
-            for(String fieldName : destinationBySource.keySet()) {
+            for (String fieldName : destinationBySource.keySet()) {
                 try {
                     model.get(fieldName);
                 } catch (Exception e) {
                     continue;
                 }
 
-                if(model.get(fieldName) != null) {
-                    Repository repository = new Repository(smartStore, sourceClassBySourceFieldName.get(fieldName)) {};
+                if (model.get(fieldName) != null) {
+                    Repository repository = new Repository(smartStore, sourceClassBySourceFieldName.get(fieldName)) {
+                    };
                     SmartObject tmpModel = repository.findByEntryId(model.getLong(fieldName));
-                    if(tmpModel == null) continue;
+                    if (tmpModel == null) continue;
                     String retrievedId = tmpModel.getId();
-                    if(retrievedId.length() > 18) continue;
+                    if (retrievedId.length() > 18) continue;
                     model.put(destinationBySource.get(fieldName), retrievedId);
                     model.put(fieldName, null);
                     hasToUpdate = true;
                 }
             }
 
-            if(hasToUpdate) {
+            if (hasToUpdate) {
                 smartStore.update(getSoup(type), model, model.getLong(SmartObjectConstants.SOUP_ENTRY_ID));
             }
         }
     }
 
-    private Map<String, String> getDestinationBySource (Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName) {
+    private Map<String, String> getDestinationBySource(Map<String, Class<? extends SmartObject>> sourceClassBySourceFieldName) {
         List<Field> sourceFields = new ArrayList<>();
         List<Field> destinationFields = new ArrayList<>();
         List<Field> fields = Arrays.asList(type.getDeclaredFields());
         Map<String, String> destinationBySource = new HashMap<>();
 
-        for(Field field : fields) {
+        for (Field field : fields) {
             if (field.isAnnotationPresent(SourceLocalParent.class)) {
                 sourceFields.add(field);
             }
 
-            if(field.isAnnotationPresent(DestinationLocalParent.class)) {
+            if (field.isAnnotationPresent(DestinationLocalParent.class)) {
                 destinationFields.add(field);
             }
         }
 
-        for(Field source : sourceFields) {
+        for (Field source : sourceFields) {
             Class<? extends SmartObject> sourceClass = null;
-            for(Annotation annotation : source.getAnnotations()) {
-                if(annotation instanceof SourceLocalParent){
-                    sourceClass = ((SourceLocalParent)annotation).value();
+            for (Annotation annotation : source.getAnnotations()) {
+                if (annotation instanceof SourceLocalParent) {
+                    sourceClass = ((SourceLocalParent) annotation).value();
                     break;
                 }
             }
 
-            for(Field destination : destinationFields) {
+            for (Field destination : destinationFields) {
                 Class<? extends SmartObject> destinationClass = null;
                 String fieldName = "";
-                for(Annotation annotation : destination.getAnnotations()) {
-                    if(annotation instanceof DestinationLocalParent){
-                        destinationClass = ((DestinationLocalParent)annotation).value();
+                for (Annotation annotation : destination.getAnnotations()) {
+                    if (annotation instanceof DestinationLocalParent) {
+                        destinationClass = ((DestinationLocalParent) annotation).value();
                     }
 
-                    if(annotation instanceof JsonProperty){
-                        fieldName = ((JsonProperty)annotation).value();
+                    if (annotation instanceof JsonProperty) {
+                        fieldName = ((JsonProperty) annotation).value();
                     }
                 }
 
-                if(sourceClass != null && destinationClass != null && !fieldName.equals("") && sourceClass == destinationClass) {
+                if (sourceClass != null && destinationClass != null && !fieldName.equals("") && sourceClass == destinationClass) {
                     destinationBySource.put(source.getName(), fieldName);
                     sourceClassBySourceFieldName.put(source.getName(), sourceClass);
                     break;
@@ -308,14 +309,14 @@ public class SObjectSyncher<T extends SmartObject>{
     }
 
     private String getSoup(Class<? extends SmartObject> modelClass) {
-        if(!modelClass.isAnnotationPresent(SObject.class)) {
+        if (!modelClass.isAnnotationPresent(SObject.class)) {
             Log.e(SmartObject.class.getSimpleName() + "::GET_SOUP", "SObject annotation missing in model class: " + modelClass.getSimpleName());
             return "";
         }
 
-        for(Annotation annotation : modelClass.getAnnotations()) {
-            if(annotation instanceof SObject){
-                return ((SObject)annotation).value();
+        for (Annotation annotation : modelClass.getAnnotations()) {
+            if (annotation instanceof SObject) {
+                return ((SObject) annotation).value();
             }
         }
 
