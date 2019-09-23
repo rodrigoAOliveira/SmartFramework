@@ -5,8 +5,7 @@
     android:versionCode="57"
     android:versionName="5.2.0">
 
-    <uses-sdk android:minSdkVersion="19"
-        android:targetSdkVersion="25" />
+    <uses-sdk android:targetSdkVersion="25" />
 
     <application />
 </manifest>
