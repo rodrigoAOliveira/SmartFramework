@@ -5,5 +5,7 @@
     android:versionCode="62"
     android:versionName="7.0.0">
 
+    <uses-sdk android:targetSdkVersion="25" />
+
     <application />
 </manifest>

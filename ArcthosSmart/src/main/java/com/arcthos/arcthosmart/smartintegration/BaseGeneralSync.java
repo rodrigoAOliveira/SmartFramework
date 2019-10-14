@@ -121,6 +121,23 @@ public abstract class BaseGeneralSync {
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
+    protected void syncDownFullObject(Class<? extends SmartObject> model) {
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        String where = getCustomWhere(model);
+
+        if (where.startsWith("AND ")) {
+            where = where.substring(3, where.length());
+        }
+
+        if (where.startsWith("OR ")) {
+            where = where.substring(2, where.length());
+        }
+
+        sObjectSyncher.setWhere(where);
+
+        new SyncDownObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+    }
+
     protected void syncUnitaryObject(Class<? extends SmartObject> model) {
         String lastUpdate = PreferencesManager.getInstance().getStringValue(LAST_SYNC);
         formattedLastUpdate = formatLastUpdate(lastUpdate);

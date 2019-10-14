@@ -57,7 +57,8 @@ android {
   }
   defaultConfig {
     testApplicationId "com.salesforce.androidsdk.smartstore.tests"
-    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
+    testInstrumentationRunner "com.salesforce.androidsdk.analytics.util.test.JUnitReportTestRunner"
+      minSdkVersion 19
   }
   packagingOptions {
     exclude 'META-INF/LICENSE'
