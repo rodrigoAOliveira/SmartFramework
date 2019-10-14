@@ -21,6 +21,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 import retrofit2.converter.jackson.JacksonConverterFactory;
 
+
 /**
  * Created by Vinicius Damiati on 16-Oct-17.
  */
@@ -51,6 +52,7 @@ public class NetworkHelper {
         Call<RefreshToken> call = refreshTokenService.getRefreshToken("refresh_token", SalesforceAnalyticsManager.getDeviceAppAttributes().getClientId(), user.getRefreshToken());
 
         call.enqueue(new Callback<RefreshToken>() {
+
             @Override
             public void onResponse(Call<RefreshToken> call, Response<RefreshToken> response) {
                 if (response.isSuccessful()) {

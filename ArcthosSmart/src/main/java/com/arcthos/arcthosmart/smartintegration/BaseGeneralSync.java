@@ -122,7 +122,7 @@ public abstract class BaseGeneralSync {
     }
 
     protected void syncDownFullObject(Class<? extends SmartObject> model) {
-        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context, syncCallback, false);
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = getCustomWhere(model);
 
         if (where.startsWith("AND ")) {
