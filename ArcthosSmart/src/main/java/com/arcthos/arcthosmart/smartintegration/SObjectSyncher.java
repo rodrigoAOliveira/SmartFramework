@@ -120,6 +120,7 @@ public class SObjectSyncher<T extends SmartObject> {
 
     private synchronized void syncUp(final boolean doSyncdownAfter, final String id, final ChainedCallback chainedCallback) {
         List<String> fieldsSyncUp = modelBuildingHelper.getFieldsToSyncUp();
+        List<String> fieldsSyncUpForUpdate = modelBuildingHelper.getFieldsToSyncUpForUpdate();
         if (chainedSync) {
             try {
                 updateChainedObject();
@@ -143,7 +144,7 @@ public class SObjectSyncher<T extends SmartObject> {
             }
         }
 
-        final SyncOptions options = SyncOptions.optionsForSyncUp(fieldsSyncUp, SyncState.MergeMode.OVERWRITE);
+        final SyncOptions options = SyncOptions.optionsForSyncUp(fieldsSyncUp, fieldsSyncUpForUpdate, SyncState.MergeMode.OVERWRITE);
 
         try {
             final JSONObject finalObject = object;

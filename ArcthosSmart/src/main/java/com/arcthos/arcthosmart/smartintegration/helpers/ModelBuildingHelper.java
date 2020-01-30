@@ -3,6 +3,7 @@ package com.arcthos.arcthosmart.smartintegration.helpers;
 import android.util.Log;
 
 import com.arcthos.arcthosmart.annotations.Ignore;
+import com.arcthos.arcthosmart.annotations.IgnoreOnUpdate;
 import com.arcthos.arcthosmart.annotations.LookUp;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.SoqlWhere;
@@ -90,26 +91,30 @@ public class ModelBuildingHelper<T extends SmartObject> {
     }
 
     public List<String> getFieldsToSyncUp() {
-        return getFieldsToSync(false);
+        return getFieldsToSync(false, false);
+    }
+
+    public List<String> getFieldsToSyncUpForUpdate() {
+        return getFieldsToSync(false, true);
     }
 
     public List<String> getFieldsToSyncDown() {
-        return getFieldsToSync(true);
+        return getFieldsToSync(true, false);
     }
 
-    private List<String> getFieldsToSync(boolean syncDown) {
+    private List<String> getFieldsToSync(boolean syncDown, boolean forUpdate) {
         List<String> fieldsToSync = new ArrayList<>();
 
         List<Field> fields = Arrays.asList(modelClass.getDeclaredFields());
         List<Field> superClassFields = Arrays.asList(modelClass.getSuperclass().getDeclaredFields());
 
-        getFieldsToSyncByCollection(fieldsToSync, superClassFields, syncDown);
-        getFieldsToSyncByCollection(fieldsToSync, fields, syncDown);
+        getFieldsToSyncByCollection(fieldsToSync, superClassFields, syncDown, forUpdate);
+        getFieldsToSyncByCollection(fieldsToSync, fields, syncDown, forUpdate);
 
         return fieldsToSync;
     }
 
-    private void getFieldsToSyncByCollection(List<String> fieldsToSync, List<Field> fields, boolean syncDown) {
+    private void getFieldsToSyncByCollection(List<String> fieldsToSync, List<Field> fields, boolean syncDown, boolean forUpdate) {
         for (Field field : fields) {
             if (field.isAnnotationPresent(Ignore.class)) {
                 continue;
@@ -120,6 +125,10 @@ public class ModelBuildingHelper<T extends SmartObject> {
             }
 
             if (field.isAnnotationPresent(LookUp.class) && !syncDown) {
+                continue;
+            }
+
+            if (field.isAnnotationPresent(IgnoreOnUpdate.class) && !syncDown && forUpdate) {
                 continue;
             }
 

@@ -58,6 +58,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -651,7 +652,9 @@ public class SyncManager {
                 }
                 break;
             case update:
-                statusCode = target.updateOnServer(this, record, options.getFieldlist());
+                List<String> fieldsForUpdate = options.getFieldlistForUpdate();
+
+                statusCode = target.updateOnServer(this, record, (fieldsForUpdate != null && !fieldsForUpdate.isEmpty() ? fieldsForUpdate : options.getFieldlist()));
                 // Success
                 if (RestResponse.isSuccess(statusCode)) {
                     target.cleanAndSaveInLocalStore(this, soupName, record);
@@ -659,7 +662,7 @@ public class SyncManager {
                 // Handling remotely deleted records
                 else if (statusCode == HttpURLConnection.HTTP_NOT_FOUND) {
                     if (mergeMode == MergeMode.OVERWRITE) {
-                        recordServerId = target.createOnServer(this, record, options.getFieldlist());
+                        recordServerId = target.createOnServer(this, record, (fieldsForUpdate != null && !fieldsForUpdate.isEmpty() ? fieldsForUpdate : options.getFieldlist()));
                         if (recordServerId != null) {
                             record.put(target.getIdFieldName(), recordServerId);
                             target.cleanAndSaveInLocalStore(this, soupName, record);
