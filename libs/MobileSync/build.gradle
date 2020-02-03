@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
@@ -15,18 +15,17 @@ apply plugin: 'com.jfrog.bintray'
 
 dependencies {
     api project(':libs:SmartStore')
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test:rules:1.1.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.0.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
 }
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 29
 
     defaultConfig {
-        targetSdkVersion 28
-        minSdkVersion 21
+        targetSdkVersion 29
+        minSdkVersion 23
     }
   
   buildTypes {
@@ -46,17 +45,16 @@ android {
       assets.srcDirs = ['assets']
     }
 
-    androidTest.setRoot('../test/SmartSyncTest')
+    androidTest.setRoot('../test/MobileSyncTest')
     androidTest {
-      java.srcDirs = ['../test/SmartSyncTest/src']
-      resources.srcDirs = ['../test/SmartSyncTest/src']
-      res.srcDirs = ['../test/SmartSyncTest/res']
+      java.srcDirs = ['../test/MobileSyncTest/src']
+      resources.srcDirs = ['../test/MobileSyncTest/src']
+      res.srcDirs = ['../test/MobileSyncTest/res']
     }
   }
   defaultConfig {
-    testApplicationId "com.salesforce.androidsdk.smartsync.tests"
-    testInstrumentationRunner "com.salesforce.androidsdk.analytics.util.test.JUnitReportTestRunner"
-      minSdkVersion 19
+    testApplicationId "com.salesforce.androidsdk.mobilesync.tests"
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   packagingOptions {
     exclude 'META-INF/LICENSE'
@@ -76,7 +74,7 @@ install {
         pom {
             project {
                 packaging 'aar'
-                name 'SmartSync'
+                name 'MobileSync'
                 url 'https://github.com/forcedotcom/SalesforceMobileSDK-Android'
                 licenses {
                     license {
@@ -117,7 +115,7 @@ bintray {
     configurations = ['archives']
     pkg {
         repo = 'salesforcemobilesdk'
-        name = 'smart-sync'
+        name = 'mobile-sync'
         userOrg = 'forcedotcom'
         licenses = ['Apache-2.0']
         vcsUrl = 'https://github.com/forcedotcom/SalesforceMobileSDK-Android.git'
@@ -129,9 +127,9 @@ bintray {
         licenses = ['Apache-2.0']
         labels = ['android', 'salesforce', 'mobilesdk']
         version {
-            name = '7.0.0'
+            name = '8.0.0'
             released  = new Date()
-            vcsTag = 'v7.0.0'
+            vcsTag = 'v8.0.0'
         }
     }
 }

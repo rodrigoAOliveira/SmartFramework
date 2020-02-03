@@ -29,7 +29,7 @@ package com.salesforce.androidsdk.mobilesync.target;
 import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.util.Constants;
-import com.salesforce.androidsdk.mobilesync.util.SmartSyncLogger;
+import com.salesforce.androidsdk.mobilesync.util.MobileSyncLogger;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 
 import org.json.JSONArray;
@@ -252,6 +252,16 @@ public abstract class SyncDownTarget extends SyncTarget {
     }
 
     /**
+     * When sync down fetches records from older to newer, the maxTimeStamp for the sync
+     * can be updated throughout the sync, and as a result running a paused (or killed) sync
+     * does not refetch all records.
+     * @return true if sync down is sorted by latest modification time stamp
+     */
+    public boolean isSyncDownSortedByLatestModification() {
+        return false;
+    }
+
+    /**
      * Gets the latest modification timestamp from the array of records.
      * @param records
      * @param modifiedDateFieldName
@@ -270,7 +280,7 @@ public abstract class SyncDownTarget extends SyncTarget {
                 long timeStamp = Constants.TIMESTAMP_FORMAT.parse(timeStampStr).getTime();
                 maxTimeStamp = Math.max(timeStamp, maxTimeStamp);
             } catch (Exception e) {
-                SmartSyncLogger.w(TAG, "Could not parse modification date field: " + modifiedDateFieldName, e);
+                MobileSyncLogger.w(TAG, "Could not parse modification date field: " + modifiedDateFieldName, e);
                 maxTimeStamp = -1;
                 break;
             }

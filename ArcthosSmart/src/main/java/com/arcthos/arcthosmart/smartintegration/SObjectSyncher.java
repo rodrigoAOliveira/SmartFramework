@@ -174,7 +174,7 @@ public class SObjectSyncher<T extends SmartObject> {
             });
         } catch (JSONException e) {
             Log.e(type.getSimpleName(), "JSONException occurred while parsing", e);
-        } catch (SyncManager.SmartSyncException e) {
+        } catch (SyncManager.MobileSyncException e) {
             Log.e(type.getSimpleName(), "SmartSyncException occurred while attempting to sync up", e);
         } catch (Exception e) {
             Log.e(type.getSimpleName(), "Exception occurred while attempting to sync up", e);
@@ -220,7 +220,7 @@ public class SObjectSyncher<T extends SmartObject> {
             }
         } catch (JSONException e) {
             Log.e(type.getSimpleName(), "JSONException occurred while parsing", e);
-        } catch (SyncManager.SmartSyncException e) {
+        } catch (SyncManager.MobileSyncException e) {
             Log.e(type.getSimpleName(), "SmartSyncException occurred while attempting to sync down", e);
         }
     }

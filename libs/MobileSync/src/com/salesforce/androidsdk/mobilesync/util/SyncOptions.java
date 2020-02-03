@@ -128,7 +128,7 @@ public class SyncOptions {
 		this.mergeMode = mergeMode;
 		this.fieldlistForUpdate = fieldlistForUpdate;
 	}
-	
+
 	/**
 	 * @return json representation of target
 	 * @throws JSONException

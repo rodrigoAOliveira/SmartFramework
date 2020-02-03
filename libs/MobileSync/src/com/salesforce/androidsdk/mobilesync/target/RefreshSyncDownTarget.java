@@ -202,7 +202,7 @@ public class RefreshSyncDownTarget extends SyncDownTarget {
                 : "");
         final String soql = SOQLBuilder.getInstanceWithFields(fieldlist).from(objectType).where(whereClause).build();
         final RestRequest request = RestRequest.getRequestForQuery(syncManager.apiVersion, soql);
-        final RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+        final RestResponse response = syncManager.sendSyncWithMobileSyncUserAgent(request);
         JSONObject responseJson = response.asJSONObject();
         return responseJson.getJSONArray(Constants.RECORDS);
     }
@@ -217,6 +217,8 @@ public class RefreshSyncDownTarget extends SyncDownTarget {
         int sliceSize = getCountIdsPerSoql();
         int countSlices = (int) Math.ceil((double) localIds.size() / sliceSize);
         for (int slice = 0; slice < countSlices; slice++) {
+            syncManager.checkAcceptingSyncs();
+
             List<String> idsToFetch = localIdsList.subList(slice * sliceSize, Math.min(localIdsList.size(), (slice + 1) * sliceSize));
             JSONArray records = fetchFromServer(syncManager, idsToFetch, Arrays.asList(getIdFieldName()), 0 /* get all */);
             remoteIds.addAll(parseIdsFromResponse(records));

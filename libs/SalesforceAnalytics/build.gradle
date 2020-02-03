@@ -4,7 +4,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.0'
+        classpath 'com.github.dcendents:android-maven-gradle-plugin:2.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.7.3'
     }
 }
@@ -15,18 +15,17 @@ apply plugin: 'com.jfrog.bintray'
 
 dependencies {
     api 'com.squareup:tape:1.2.3'
-    androidTestImplementation 'androidx.test:runner:1.1.0'
-    androidTestImplementation 'androidx.test:rules:1.1.0'
-    androidTestImplementation 'androidx.test.ext:junit:1.0.0'
+    androidTestImplementation 'androidx.test:runner:1.2.0'
+    androidTestImplementation 'androidx.test:rules:1.2.0'
+    androidTestImplementation 'androidx.test.ext:junit:1.1.1'
 }
 
 android {
-    compileSdkVersion 28
-    buildToolsVersion '28.0.3'
+    compileSdkVersion 29
 
     defaultConfig {
-        targetSdkVersion 28
-        minSdkVersion 21
+        targetSdkVersion 29
+        minSdkVersion 23
     }
 
   buildTypes {
@@ -54,8 +53,7 @@ android {
   }
   defaultConfig {
     testApplicationId "com.salesforce.androidsdk.analytics.tests"
-    testInstrumentationRunner "com.salesforce.androidsdk.analytics.util.test.JUnitReportTestRunner"
-      minSdkVersion 19
+    testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
   }
   packagingOptions {
     exclude 'META-INF/LICENSE'
@@ -128,9 +126,9 @@ bintray {
         licenses = ['Apache-2.0']
         labels = ['android', 'salesforce', 'mobilesdk']
         version {
-            name = '7.0.0'
+            name = '8.0.0'
             released  = new Date()
-            vcsTag = 'v7.0.0'
+            vcsTag = 'v8.0.0'
         }
     }
 }

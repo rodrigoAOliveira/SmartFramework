@@ -29,7 +29,7 @@ package com.salesforce.androidsdk.mobilesync.target;
 import android.text.TextUtils;
 
 import com.salesforce.androidsdk.mobilesync.app.Features;
-import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
+import com.salesforce.androidsdk.mobilesync.app.MobileSyncSDKManager;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.target.ParentChildrenSyncTargetHelper.RelationshipType;
 import com.salesforce.androidsdk.mobilesync.util.ChildrenInfo;
@@ -93,7 +93,7 @@ public class ParentChildrenSyncDownTarget extends SoqlSyncDownTarget {
         this.childrenInfo = childrenInfo;
         this.childrenFieldlist = childrenFieldlist;
         this.relationshipType = relationshipType;
-        SmartSyncSDKManager.getInstance().registerUsedAppFeature(Features.FEATURE_RELATED_RECORDS);
+        MobileSyncSDKManager.getInstance().registerUsedAppFeature(Features.FEATURE_RELATED_RECORDS);
     }
 
     /**
@@ -162,7 +162,6 @@ public class ParentChildrenSyncDownTarget extends SoqlSyncDownTarget {
         return builder.build();
     }
 
-
     @Override
     public int cleanGhosts(SyncManager syncManager, String soupName, long syncId) throws JSONException, IOException {
         // Taking care of ghost parents
@@ -189,6 +188,7 @@ public class ParentChildrenSyncDownTarget extends SoqlSyncDownTarget {
         JSONArray records = startFetch(syncManager, soqlForChildrenRemoteIds);
         final Set<String> remoteChildrenIds = new HashSet<>(parseChildrenIdsFromResponse(records));
         while (records != null) {
+            syncManager.checkAcceptingSyncs();
 
             // Fetch next records, if any.
             records = continueFetch(syncManager);
@@ -258,7 +258,13 @@ public class ParentChildrenSyncDownTarget extends SoqlSyncDownTarget {
         SOQLBuilder builder = SOQLBuilder.getInstanceWithFields(fields);
         builder.from(parentInfo.sobjectType);
         builder.where(parentWhere.toString());
+        builder.orderBy(parentInfo.modificationDateFieldName);
         return builder.build();
+    }
+
+    @Override
+    public boolean isSyncDownSortedByLatestModification() {
+        return true;
     }
 
     private StringBuilder buildModificationDateFilter(String modificationDateFieldName, long maxTimeStamp) {

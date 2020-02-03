@@ -26,18 +26,19 @@
  */
 package com.salesforce.androidsdk.mobilesync.target;
 
-import com.salesforce.androidsdk.rest.RestRequest;
-import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.mobilesync.app.Features;
-import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
+import com.salesforce.androidsdk.mobilesync.app.MobileSyncSDKManager;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.target.ParentChildrenSyncTargetHelper.RelationshipType;
 import com.salesforce.androidsdk.mobilesync.util.ChildrenInfo;
 import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.MobileSyncLogger;
 import com.salesforce.androidsdk.mobilesync.util.ParentInfo;
 import com.salesforce.androidsdk.mobilesync.util.SOQLBuilder;
-import com.salesforce.androidsdk.mobilesync.util.SmartSyncLogger;
 import com.salesforce.androidsdk.mobilesync.util.SyncState;
+import com.salesforce.androidsdk.rest.CompositeResponse.CompositeSubResponse;
+import com.salesforce.androidsdk.rest.RestRequest;
+import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 
 import org.json.JSONArray;
@@ -60,8 +61,6 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
     // Constants
     public static final String CHILDREN_CREATE_FIELDLIST = "childrenCreateFieldlist";
     public static final String CHILDREN_UPDATE_FIELDLIST = "childrenUpdateFieldlist";
-    public static final String COMPOSITE_RESPONSE = "compositeResponse";
-    public static final String REFERENCE_ID = "referenceId";
     public static final String BODY = "body";
     public static final String HTTP_STATUS_CODE = "httpStatusCode";
 
@@ -96,7 +95,7 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
         this.childrenCreateFieldlist = childrenCreateFieldlist;
         this.childrenUpdateFieldlist = childrenUpdateFieldlist;
         this.relationshipType = relationshipType;
-        SmartSyncSDKManager.getInstance().registerUsedAppFeature(Features.FEATURE_RELATED_RECORDS);
+        MobileSyncSDKManager.getInstance().registerUsedAppFeature(Features.FEATURE_RELATED_RECORDS);
     }
 
     @Override
@@ -131,7 +130,22 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
     }
 
     @Override
-    public void syncUpRecord(SyncManager syncManager, JSONObject record, List<String> fieldlist, SyncState.MergeMode mergeMode) throws JSONException, IOException {
+    public int getMaxBatchSize() {
+        return 1;
+    }
+
+    @Override
+    public void syncUpRecords(SyncManager syncManager, List<JSONObject> records, List<String> fieldlist, SyncState.MergeMode mergeMode, String syncSoupName) throws JSONException, IOException {
+        if (records.size() > 1) {
+            throw new SyncManager.MobileSyncException(getClass().getSimpleName() + ":syncUpRecords can handle only 1 record at a time");
+        }
+
+        if (!records.isEmpty()) {
+            syncUpRecord(syncManager, records.get(0), fieldlist, mergeMode);
+        }
+    }
+
+    private void syncUpRecord(SyncManager syncManager, JSONObject record, List<String> fieldlist, SyncState.MergeMode mergeMode) throws JSONException, IOException {
 
         boolean isCreate = isLocallyCreated(record);
         boolean isDelete = isLocallyDeleted(record);
@@ -185,10 +199,10 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
             refIdToRequests.put(parentId, parentRequest);
 
         // Sending composite request
-        Map<String, JSONObject> refIdToResponses = sendCompositeRequest(syncManager, false, refIdToRequests);
+        Map<String, CompositeSubResponse> refIdToResponses = CompositeRequestHelper.sendCompositeRequest(syncManager, false, refIdToRequests);
 
         // Build refId to server id / status code / time stamp maps
-        Map<String, String> refIdToServerId = parseIdsFromResponse(refIdToResponses);
+        Map<String, String> refIdToServerId = CompositeRequestHelper.parseIdsFromResponses(refIdToResponses.values());
 
         // Will a re-run be required?
         boolean needReRun = false;
@@ -211,15 +225,15 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
 
         // Re-run if required
         if (needReRun) {
-            SmartSyncLogger.d(TAG, "syncUpOneRecord", record);
+            MobileSyncLogger.d(TAG, "syncUpOneRecord", record);
             syncUpRecord(syncManager, record, children, fieldlist, mergeMode);
         }
     }
 
-    protected boolean updateParentRecordInLocalStore(SyncManager syncManager, JSONObject record, JSONArray children, SyncState.MergeMode mergeMode, Map<String, String> refIdToServerId, JSONObject response) throws JSONException, IOException {
+    protected boolean updateParentRecordInLocalStore(SyncManager syncManager, JSONObject record, JSONArray children, SyncState.MergeMode mergeMode, Map<String, String> refIdToServerId, CompositeSubResponse response) throws JSONException, IOException {
         boolean needReRun = false;
         final String soupName = parentInfo.soupName;
-        final Integer statusCode = response != null ? response.getInt(HTTP_STATUS_CODE) : -1;
+        final Integer statusCode = response != null ? response.httpStatusCode : -1;
 
         // Delete case
         if (isLocallyDeleted(record)) {
@@ -245,7 +259,7 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
             if (RestResponse.isSuccess(statusCode))
             {
                 // Plugging server id in id field
-                updateReferences(record, getIdFieldName(), refIdToServerId);
+                CompositeRequestHelper.updateReferences(record, getIdFieldName(), refIdToServerId);
 
                 // Clean and save
                 cleanAndSaveInLocalStore(syncManager, soupName, record);
@@ -274,10 +288,10 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
         return needReRun;
     }
 
-    protected boolean updateChildRecordInLocalStore(SyncManager syncManager, JSONObject record, JSONObject parentRecord, SyncState.MergeMode mergeMode, Map<String, String> refIdToServerId, JSONObject response) throws JSONException {
+    protected boolean updateChildRecordInLocalStore(SyncManager syncManager, JSONObject record, JSONObject parentRecord, SyncState.MergeMode mergeMode, Map<String, String> refIdToServerId, CompositeSubResponse response) throws JSONException {
         boolean needReRun = false;
         final String soupName = childrenInfo.soupName;
-        final Integer statusCode = response != null ? response.getInt(HTTP_STATUS_CODE) : -1;
+        final Integer statusCode = response != null ? response.httpStatusCode : -1;
 
         // Delete case
         if (isLocallyDeleted(record)) {
@@ -299,10 +313,10 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
             if (RestResponse.isSuccess(statusCode))
             {
                 // Plugging server id in id field
-                updateReferences(record, childrenInfo.idFieldName, refIdToServerId);
+                CompositeRequestHelper.updateReferences(record, childrenInfo.idFieldName, refIdToServerId);
 
                 // Plugging server id in parent id field
-                updateReferences(record, childrenInfo.parentIdFieldName, refIdToServerId);
+                CompositeRequestHelper.updateReferences(record, childrenInfo.parentIdFieldName, refIdToServerId);
 
                 // Clean and save
                 cleanAndSaveInLocalStore(syncManager, soupName, record);
@@ -409,13 +423,6 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
         }
     }
 
-    protected void updateReferences(JSONObject record, String fieldWithRefId, Map<String, String> refIdToServerId) throws JSONException {
-        String refId = JSONObjectHelper.optString(record, fieldWithRefId);
-        if (refId != null && refIdToServerId.containsKey(refId)) {
-            record.put(fieldWithRefId, refIdToServerId.get(refId));
-        }
-    }
-
     @Override
     public boolean isNewerThanServer(SyncManager syncManager, JSONObject record) throws JSONException, IOException {
         if (isLocallyCreated(record)) {
@@ -479,7 +486,7 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
         if (!isLocallyCreated(record)) {
             String parentId = record.getString(getIdFieldName());
             RestRequest lastModRequest = getRequestForTimestamps(syncManager.apiVersion, parentId);
-            RestResponse lastModResponse = syncManager.sendSyncWithSmartSyncUserAgent(lastModRequest);
+            RestResponse lastModResponse = syncManager.sendSyncWithMobileSyncUserAgent(lastModRequest);
             JSONArray rows = lastModResponse.isSuccess() ? lastModResponse.asJSONObject().getJSONArray(Constants.RECORDS) : null;
             if (rows != null && rows.length() > 0) {
                 JSONObject row = rows.getJSONObject(0);
@@ -513,39 +520,9 @@ public class ParentChildrenSyncUpTarget extends SyncUpTarget implements Advanced
         return RestRequest.getRequestForQuery(apiVersion, builder.build());
     }
 
-    protected Map<String, JSONObject> sendCompositeRequest(SyncManager syncManager, boolean allOrNone, LinkedHashMap<String, RestRequest> refIdToRequests) throws JSONException, IOException {
-        RestRequest compositeRequest = RestRequest.getCompositeRequest(syncManager.apiVersion, allOrNone, refIdToRequests);
-        RestResponse compositeResponse = syncManager.sendSyncWithSmartSyncUserAgent(compositeRequest);
-        if (!compositeResponse.isSuccess()) {
-            throw new SyncManager.SmartSyncException("sendCompositeRequest:" + compositeResponse.toString());
-        }
-        JSONArray responses = compositeResponse.asJSONObject().getJSONArray(COMPOSITE_RESPONSE);
-        Map<String, JSONObject> refIdToResponses = new HashMap<>();
-        for (int i = 0; i < responses.length(); i++) {
-            JSONObject response = responses.getJSONObject(i);
-            refIdToResponses.put(response.getString(REFERENCE_ID), response);
-        }
-        return refIdToResponses;
-    }
-
-    /**
-     * Return ref id to server id map if successful
-     */
-    protected Map<String, String> parseIdsFromResponse(Map<String, JSONObject> refIdToResponses) throws JSONException {
-        Map<String, String> refIdtoId = new HashMap<>();
-        for (String refId : refIdToResponses.keySet()) {
-            JSONObject response = refIdToResponses.get(refId);
-            if (response.getInt(HTTP_STATUS_CODE) == HttpURLConnection.HTTP_CREATED) {
-                String serverId = response.getJSONObject(BODY).getString(Constants.LID);
-                refIdtoId.put(refId, serverId);
-            }
-        }
-        return refIdtoId;
-    }
-
-    protected boolean isEntityDeleted(JSONObject response) {
+    protected boolean isEntityDeleted(CompositeSubResponse response) {
         try {
-            return response != null && "ENTITY_IS_DELETED".equals(response.getJSONArray("body").getJSONObject(0).getString("errorCode"));
+            return response != null && "ENTITY_IS_DELETED".equals(response.bodyAsJSONArray().getJSONObject(0).getString("errorCode"));
         } catch (JSONException e) {
             return false;
         }

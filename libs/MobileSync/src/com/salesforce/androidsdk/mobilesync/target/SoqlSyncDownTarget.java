@@ -26,25 +26,20 @@
  */
 package com.salesforce.androidsdk.mobilesync.target;
 
-import android.os.Environment;
 import android.text.TextUtils;
-import android.util.Log;
 
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.SOQLMutator;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
@@ -65,7 +60,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
      */
     public SoqlSyncDownTarget(JSONObject target) throws JSONException {
         super(target);
-        this.query = addSpecialFieldsIfRequired(JSONObjectHelper.optString(target, QUERY));
+        this.query = modifyQueryIfNeeded(JSONObjectHelper.optString(target, QUERY));
     }
 
 	/**
@@ -83,25 +78,46 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
     public SoqlSyncDownTarget(String idFieldName, String modificationDateFieldName, String query) {
         super(idFieldName, modificationDateFieldName);
         this.queryType = QueryType.soql;
-        this.query = addSpecialFieldsIfRequired(query);
+        this.query = modifyQueryIfNeeded(query);
     }
 
-    private String addSpecialFieldsIfRequired(String query) {
+    private String modifyQueryIfNeeded(String query) {
         if (!TextUtils.isEmpty(query)) {
+
+            SOQLMutator mutator = new SOQLMutator(query);
+            boolean mutated = false;
 
             // Inserts the mandatory 'LastModifiedDate' field if it doesn't exist.
             final String lastModFieldName = getModificationDateFieldName();
-            if (!query.contains(lastModFieldName)) {
-                query = query.replaceFirst("([sS][eE][lL][eE][cC][tT] )", "select " + lastModFieldName + ", ");
+            if (!mutator.isSelectingField(lastModFieldName)) {
+                mutated = true;
+                mutator.addSelectFields(lastModFieldName);
             }
 
             // Inserts the mandatory 'Id' field if it doesn't exist.
             final String idFieldName = getIdFieldName();
-            if (!query.contains(idFieldName)) {
-                query = query.replaceFirst("([sS][eE][lL][eE][cC][tT] )", "select " + idFieldName + ", ");
+            if (!mutator.isSelectingField(idFieldName)) {
+                mutated = true;
+                mutator.addSelectFields(idFieldName);
+            }
+
+            // Order by 'LastModifiedDate' field if no order by specified
+            if (!mutator.hasOrderBy()) {
+                mutated = true;
+                mutator.replaceOrderBy(lastModFieldName);
+            }
+
+            if (mutated) {
+                query = mutator.asBuilder().build();
             }
         }
         return query;
+    }
+
+
+    @Override
+    public boolean isSyncDownSortedByLatestModification() {
+        return new SOQLMutator(query).isOrderingBy(getModificationDateFieldName());
     }
 
 	/**
@@ -114,52 +130,6 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
 		return target;
 	}
 
-    private void saveSyncDownErrorLog(String query, RestRequest request, RestResponse response) {
-        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-        String currentDateAndTime = sdf.format(new Date());
-
-        File directory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication");
-        File subDirectory = new File(Environment.getExternalStorageDirectory().getPath() + "/SalesforceApplication/ErrorLogs");
-
-        if(!directory.exists()) {
-            directory.mkdir();
-
-            if(!subDirectory.exists()) {
-                subDirectory.mkdir();
-            }
-        } else {
-            if(!subDirectory.exists()) {
-                subDirectory.mkdir();
-            }
-        }
-
-        try {
-            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
-                    .getExternalStorageDirectory().getPath()
-                    + "/SalesforceApplication/ErrorLogs/SyncDownErrorLog.txt", true));
-
-            log.write(currentDateAndTime + " - Request: " + request.toString() + " - Response: " + response.toString() + " - Query: " + query);
-            log.write("\r\n");
-            log.close();
-
-        } catch (IOException e) {
-            Log.e(SoqlSyncDownTarget.class.getSimpleName(), e.getMessage(), e);
-        }
-
-        try {
-            BufferedWriter log = new BufferedWriter(new FileWriter(Environment
-                    .getExternalStorageDirectory().getPath()
-                    + "/SalesforceApplication/ErrorLogs/CurrentSyncDownErrorLog.txt", true));
-
-            log.write(currentDateAndTime + " - Request: " + request.toString() + " - Response: " + response.toString() + " - Query: " + query);
-            log.write("\r\n");
-            log.close();
-
-        } catch (IOException e) {
-            Log.e(SoqlSyncDownTarget.class.getSimpleName(), e.getMessage(), e);
-        }
-    }
-
     @Override
     public JSONArray startFetch(SyncManager syncManager, long maxTimeStamp) throws IOException, JSONException {
         return startFetch(syncManager, getQuery(maxTimeStamp));
@@ -167,23 +137,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
 
     protected JSONArray startFetch(SyncManager syncManager, String query) throws IOException, JSONException {
         RestRequest request = RestRequest.getRequestForQuery(syncManager.apiVersion, query);
-        RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
-
-        if(!response.isSuccess()) {
-            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSSZ");
-            String currentDateAndTime = sdf.format(new Date());
-
-            SyncDownError syncDownError = new SyncDownError();
-            syncDownError.setQuery(query);
-            syncDownError.setRequest(request);
-            syncDownError.setResponse(response);
-            syncDownError.setDateTime(currentDateAndTime);
-
-            syncDownErrors.add(syncDownError);
-
-            saveSyncDownErrorLog(query, request, response);
-        }
-
+        RestResponse response = syncManager.sendSyncWithMobileSyncUserAgent(request);
         JSONObject responseJson = getResponseJson(response);
         JSONArray records = getRecordsFromResponseJson(responseJson);
 
@@ -202,7 +156,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
         }
         catch (JSONException e) {
             // Rest API errors are returned as JSON array
-            throw new SyncManager.SmartSyncException(response.asString());
+            throw new SyncManager.MobileSyncException(response.asString());
         }
         return responseJson;
     }
@@ -217,7 +171,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
             return null;
         }
         RestRequest request = new RestRequest(RestRequest.RestMethod.GET, nextRecordsUrl);
-        RestResponse response = syncManager.sendSyncWithSmartSyncUserAgent(request);
+        RestResponse response = syncManager.sendSyncWithMobileSyncUserAgent(request);
         JSONObject responseJson = getResponseJson(response);
         JSONArray records = getRecordsFromResponseJson(responseJson);
 
@@ -238,6 +192,7 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
         JSONArray records = startFetch(syncManager, soqlForRemoteIds);
         remoteIds.addAll(parseIdsFromResponse(records));
         while (records != null) {
+            syncManager.checkAcceptingSyncs();
 
             // Fetch next records, if any.
             records = continueFetch(syncManager);
@@ -247,21 +202,14 @@ public class SoqlSyncDownTarget extends SyncDownTarget {
     }
 
     protected String getSoqlForRemoteIds() {
-        // Alters the SOQL query to get only IDs.
-        final StringBuilder soql = new StringBuilder("SELECT ");
-        soql.append(getIdFieldName());
-        soql.append(" FROM ");
-        final String[] fromClause = getQuery(0).split("([ ][fF][rR][oO][mM][ ])");
-        soql.append(fromClause[1]);
-        return soql.toString();
+        String fullQuery = getQuery(0);
+        return new SOQLMutator(fullQuery).replaceSelectFields(getIdFieldName()).replaceOrderBy("").asBuilder().build();
     }
 
     protected static String addFilterForReSync(String query, String modificationFieldDatName, long maxTimeStamp) {
         if (maxTimeStamp > 0) {
             String extraPredicate = modificationFieldDatName + " > " + Constants.TIMESTAMP_FORMAT.format(new Date(maxTimeStamp));
-            query = query.toLowerCase().contains(" where ")
-                    ? query.replaceFirst("( [wW][hH][eE][rR][eE] )", "$1" + extraPredicate + " and ")
-                    : query.replaceFirst("( [fF][rR][oO][mM][ ]+[^ ]*)", "$1 where " + extraPredicate);
+            query = new SOQLMutator(query).addWherePredicates(extraPredicate).asBuilder().build();
         }
         return query;
     }
