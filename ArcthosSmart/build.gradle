@@ -47,7 +47,7 @@ dependencies {
     api 'com.squareup.retrofit2:converter-jackson:2.5.0'
     api project(path: ':libs:SalesforceSDK')
     api project(path: ':libs:SmartStore')
-    api project(path: ':libs:SmartSync')
+    api project(path: ':libs:MobileSync')
 }
 
 install {

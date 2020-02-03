@@ -1,6 +1,6 @@
 package com.arcthos.arcthosmart.smartintegration;
 
-import com.salesforce.androidsdk.smartsync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
 
 import org.json.JSONObject;
 

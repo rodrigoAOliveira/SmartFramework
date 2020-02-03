@@ -33,6 +33,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     api project(path: ':libs:SalesforceSDK')
     api project(path: ':libs:SmartStore')
-    api project(path: ':libs:SmartSync')
+    api project(path: ':libs:MobileSync')
     api project(path: ':ArcthosSmart')
 }

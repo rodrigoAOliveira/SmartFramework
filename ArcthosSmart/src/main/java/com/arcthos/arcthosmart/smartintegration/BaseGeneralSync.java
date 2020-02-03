@@ -8,7 +8,7 @@ import android.util.Log;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.SoqlWhere;
 import com.arcthos.arcthosmart.smartorm.SmartObject;
-import com.salesforce.androidsdk.smartsync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
 
 import java.io.IOException;
 import java.lang.reflect.Field;

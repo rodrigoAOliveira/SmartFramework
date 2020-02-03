@@ -12,7 +12,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.smartsync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
 
 import org.json.JSONArray;
 import org.json.JSONException;
