@@ -24,9 +24,9 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.smartsync.target;
+package com.salesforce.androidsdk.mobilesync.target;
 
-import com.salesforce.androidsdk.smartsync.manager.SyncManager;
+import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 
 import org.json.JSONException;
 import org.json.JSONObject;

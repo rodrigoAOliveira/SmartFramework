@@ -24,30 +24,30 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.smartsync.manager;
+package com.salesforce.androidsdk.mobilesync.manager;
 
 import androidx.test.filters.LargeTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
-import com.salesforce.androidsdk.smartsync.target.LayoutSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.MetadataSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.MruSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.RefreshSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SoqlSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SoslSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
-import com.salesforce.androidsdk.smartsync.target.TestSyncUpTarget;
-import com.salesforce.androidsdk.smartsync.util.Constants;
-import com.salesforce.androidsdk.smartsync.util.SOQLBuilder;
-import com.salesforce.androidsdk.smartsync.util.SOSLBuilder;
-import com.salesforce.androidsdk.smartsync.util.SOSLReturningBuilder;
-import com.salesforce.androidsdk.smartsync.util.SyncOptions;
-import com.salesforce.androidsdk.smartsync.util.SyncState;
-import com.salesforce.androidsdk.smartsync.util.SyncState.MergeMode;
-import com.salesforce.androidsdk.smartsync.util.SyncUpdateCallbackQueue;
+import com.salesforce.androidsdk.mobilesync.target.LayoutSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.MetadataSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.MruSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.RefreshSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SoqlSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SoslSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncUpTarget;
+import com.salesforce.androidsdk.mobilesync.target.TestSyncUpTarget;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.SOQLBuilder;
+import com.salesforce.androidsdk.mobilesync.util.SOSLBuilder;
+import com.salesforce.androidsdk.mobilesync.util.SOSLReturningBuilder;
+import com.salesforce.androidsdk.mobilesync.util.SyncOptions;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.util.SyncState.MergeMode;
+import com.salesforce.androidsdk.mobilesync.util.SyncUpdateCallbackQueue;
 import com.salesforce.androidsdk.util.test.JSONTestHelper;
 
 import org.json.JSONArray;

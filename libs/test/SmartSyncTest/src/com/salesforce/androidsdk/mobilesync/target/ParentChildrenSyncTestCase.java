@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.androidsdk.smartsync.target;
+package com.salesforce.androidsdk.mobilesync.target;
 
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
@@ -33,12 +33,12 @@ import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartSqlHelper;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.smartsync.manager.SyncManagerTestCase;
-import com.salesforce.androidsdk.smartsync.target.ParentChildrenSyncTargetHelper.RelationshipType;
-import com.salesforce.androidsdk.smartsync.util.ChildrenInfo;
-import com.salesforce.androidsdk.smartsync.util.Constants;
-import com.salesforce.androidsdk.smartsync.util.ParentInfo;
-import com.salesforce.androidsdk.smartsync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.manager.SyncManagerTestCase;
+import com.salesforce.androidsdk.mobilesync.target.ParentChildrenSyncTargetHelper.RelationshipType;
+import com.salesforce.androidsdk.mobilesync.util.ChildrenInfo;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.ParentInfo;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 
 import org.json.JSONArray;

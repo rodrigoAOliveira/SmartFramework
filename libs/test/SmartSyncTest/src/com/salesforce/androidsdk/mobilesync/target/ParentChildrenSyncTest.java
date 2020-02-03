@@ -25,19 +25,19 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.androidsdk.smartsync.target;
+package com.salesforce.androidsdk.mobilesync.target;
 
 import androidx.test.filters.LargeTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.smartsync.target.ParentChildrenSyncTargetHelper.RelationshipType;
-import com.salesforce.androidsdk.smartsync.util.ChildrenInfo;
-import com.salesforce.androidsdk.smartsync.util.Constants;
-import com.salesforce.androidsdk.smartsync.util.ParentInfo;
-import com.salesforce.androidsdk.smartsync.util.SyncOptions;
-import com.salesforce.androidsdk.smartsync.util.SyncState;
-import com.salesforce.androidsdk.smartsync.util.SyncUpdateCallbackQueue;
+import com.salesforce.androidsdk.mobilesync.target.ParentChildrenSyncTargetHelper.RelationshipType;
+import com.salesforce.androidsdk.mobilesync.util.ChildrenInfo;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.ParentInfo;
+import com.salesforce.androidsdk.mobilesync.util.SyncOptions;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.util.SyncUpdateCallbackQueue;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 
 import org.json.JSONArray;

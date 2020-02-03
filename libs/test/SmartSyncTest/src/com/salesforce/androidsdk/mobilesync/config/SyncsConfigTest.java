@@ -25,17 +25,17 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.androidsdk.smartsync.config;
+package com.salesforce.androidsdk.mobilesync.config;
 
 import androidx.test.filters.SmallTest;
 import androidx.test.ext.junit.runners.AndroidJUnit4;
 
-import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
-import com.salesforce.androidsdk.smartsync.manager.SyncManagerTestCase;
-import com.salesforce.androidsdk.smartsync.target.SoqlSyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
-import com.salesforce.androidsdk.smartsync.util.SyncOptions;
-import com.salesforce.androidsdk.smartsync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
+import com.salesforce.androidsdk.mobilesync.manager.SyncManagerTestCase;
+import com.salesforce.androidsdk.mobilesync.target.SoqlSyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncUpTarget;
+import com.salesforce.androidsdk.mobilesync.util.SyncOptions;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
 
 import org.json.JSONException;
 import org.junit.After;

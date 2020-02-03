@@ -24,7 +24,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.smartsync.util;
+package com.salesforce.androidsdk.mobilesync.util;
 
 import com.salesforce.androidsdk.analytics.logger.SalesforceLogger;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;

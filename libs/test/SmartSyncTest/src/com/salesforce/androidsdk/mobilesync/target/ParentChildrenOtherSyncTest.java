@@ -25,7 +25,7 @@
  * POSSIBILITY OF SUCH DAMAGE.
  */
 
-package com.salesforce.androidsdk.smartsync.target;
+package com.salesforce.androidsdk.mobilesync.target;
 
 import androidx.test.filters.LargeTest;
 

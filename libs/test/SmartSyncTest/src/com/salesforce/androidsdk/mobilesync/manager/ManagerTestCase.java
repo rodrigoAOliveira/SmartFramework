@@ -24,7 +24,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.smartsync.manager;
+package com.salesforce.androidsdk.mobilesync.manager;
 
 import android.app.Application;
 import android.app.Instrumentation;
@@ -43,11 +43,11 @@ import com.salesforce.androidsdk.rest.RestClient.ClientInfo;
 import com.salesforce.androidsdk.rest.RestRequest;
 import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.smartsync.TestCredentials;
-import com.salesforce.androidsdk.smartsync.TestForceApp;
-import com.salesforce.androidsdk.smartsync.app.SmartSyncSDKManager;
-import com.salesforce.androidsdk.smartsync.util.Constants;
-import com.salesforce.androidsdk.smartsync.util.SmartSyncLogger;
+import com.salesforce.androidsdk.mobilesync.TestCredentials;
+import com.salesforce.androidsdk.mobilesync.TestForceApp;
+import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.SmartSyncLogger;
 import com.salesforce.androidsdk.util.EventsObservable.EventType;
 import com.salesforce.androidsdk.util.test.EventsListenerQueue;
 

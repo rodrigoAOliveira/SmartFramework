@@ -24,7 +24,7 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.smartsync.manager;
+package com.salesforce.androidsdk.mobilesync.manager;
 
 import android.text.TextUtils;
 
@@ -34,13 +34,13 @@ import com.salesforce.androidsdk.rest.RestResponse;
 import com.salesforce.androidsdk.smartstore.store.IndexSpec;
 import com.salesforce.androidsdk.smartstore.store.QuerySpec;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.smartsync.target.SyncDownTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncTarget;
-import com.salesforce.androidsdk.smartsync.target.SyncUpTarget;
-import com.salesforce.androidsdk.smartsync.util.Constants;
-import com.salesforce.androidsdk.smartsync.util.SyncOptions;
-import com.salesforce.androidsdk.smartsync.util.SyncState;
-import com.salesforce.androidsdk.smartsync.util.SyncUpdateCallbackQueue;
+import com.salesforce.androidsdk.mobilesync.target.SyncDownTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncTarget;
+import com.salesforce.androidsdk.mobilesync.target.SyncUpTarget;
+import com.salesforce.androidsdk.mobilesync.util.Constants;
+import com.salesforce.androidsdk.mobilesync.util.SyncOptions;
+import com.salesforce.androidsdk.mobilesync.util.SyncState;
+import com.salesforce.androidsdk.mobilesync.util.SyncUpdateCallbackQueue;
 import com.salesforce.androidsdk.util.JSONObjectHelper;
 import com.salesforce.androidsdk.util.test.JSONTestHelper;
 
