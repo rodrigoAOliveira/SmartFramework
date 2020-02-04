@@ -4,10 +4,10 @@ android {
     compileSdkVersion 28
     buildToolsVersion "28.0.3"
     defaultConfig {
-        minSdkVersion 21
+        minSdkVersion 23
         targetSdkVersion 28
-        versionCode 91
-        versionName "0.4.0"
+        versionCode 92
+        versionName "0.5.0"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -33,6 +33,6 @@ dependencies {
     testImplementation 'junit:junit:4.12'
     api project(path: ':libs:SalesforceSDK')
     api project(path: ':libs:SmartStore')
-    api project(path: ':libs:SmartSync')
+    api project(path: ':libs:MobileSync')
     api project(path: ':ArcthosSmart')
 }
