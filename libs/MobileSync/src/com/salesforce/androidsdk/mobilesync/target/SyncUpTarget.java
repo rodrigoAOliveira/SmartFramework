@@ -129,7 +129,6 @@ public class SyncUpTarget extends SyncTarget {
      */
     public SyncUpTarget() {
         this(null, null);
-        this.syncUpErrors = new ArrayList<>();
     }
 
     /**
