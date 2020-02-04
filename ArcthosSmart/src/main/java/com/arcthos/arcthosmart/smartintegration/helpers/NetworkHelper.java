@@ -11,7 +11,7 @@ import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.analytics.SalesforceAnalyticsManager;
 import com.salesforce.androidsdk.app.SalesforceSDKManager;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
+import com.salesforce.androidsdk.mobilesync.app.MobileSyncSDKManager;
 
 import java.io.File;
 
@@ -77,7 +77,7 @@ public class NetworkHelper {
     public static void logoff(Activity activity, UserAccount user) {
         PreferencesManager.initialize(activity);
         PreferencesManager.getInstance().clear();
-        SmartStore smartStore = SmartSyncSDKManager.getInstance().getSmartStore(user);
+        SmartStore smartStore = MobileSyncSDKManager.getInstance().getSmartStore(user);
         smartStore.dropAllSoups();
         SalesforceSDKManager.getInstance().logout(activity);
         deleteDbFiles(activity);

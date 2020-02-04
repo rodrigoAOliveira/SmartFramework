@@ -14,8 +14,8 @@ import com.arcthos.arcthosmart.smartorm.SmartSelect;
 import com.arcthos.arcthosmart.smartorm.repository.Repository;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.salesforce.androidsdk.accounts.UserAccount;
+import com.salesforce.androidsdk.mobilesync.app.MobileSyncSDKManager;
 import com.salesforce.androidsdk.smartstore.store.SmartStore;
-import com.salesforce.androidsdk.mobilesync.app.SmartSyncSDKManager;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.target.SoqlSyncDownTarget;
 import com.salesforce.androidsdk.mobilesync.target.SyncDownTarget;
@@ -61,8 +61,8 @@ public class SObjectSyncher<T extends SmartObject> {
     private final boolean chainedSync;
 
     public SObjectSyncher(final Class<T> type, final Resources resources, final SyncCallback syncCallback, boolean chainedSync) {
-        this.currentUser = SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
-        this.smartStore = SmartSyncSDKManager.getInstance().getSmartStore(currentUser);
+        this.currentUser = MobileSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
+        this.smartStore = MobileSyncSDKManager.getInstance().getSmartStore(currentUser);
         this.syncMgr = SyncManager.getInstance(currentUser);
         this.type = type;
         this.syncCallback = syncCallback;
@@ -70,7 +70,7 @@ public class SObjectSyncher<T extends SmartObject> {
         this.chainedSync = chainedSync;
         this.modelBuildingHelper = new ModelBuildingHelper(type);
         this.where = getDefaultWhere();
-        SmartSyncSDKManager.getInstance().getUserAccountManager().getCurrentAccount();
+        MobileSyncSDKManager.getInstance().getUserAccountManager().getCurrentAccount();
     }
 
     private String getDefaultWhere() {
