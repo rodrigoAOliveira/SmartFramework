@@ -1,34 +1,38 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion "26.0.1"
+    compileSdkVersion 28
+    buildToolsVersion "28.0.3"
     defaultConfig {
-        minSdkVersion 21
-        targetSdkVersion 26
-        versionCode 1
-        versionName "0.0.10"
+        minSdkVersion 23
+        targetSdkVersion 28
+        versionCode 94
+        versionName "0.5.2"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
         release {
-            minifyEnabled false
+            minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
+    }
+    packagingOptions{
+        exclude 'META-INF/LICENSE'
+        exclude 'META-INF/NOTICE'
     }
 }
 
 dependencies {
-    compile fileTree(dir: 'libs', include: ['*.jar'])
-    androidTestCompile('com.android.support.test.espresso:espresso-core:2.2.2', {
+    api fileTree(dir: 'libs', include: ['*.jar'])
+    androidTestImplementation('com.android.support.test.espresso:espresso-core:2.2.2', {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
-    compile 'com.android.support:appcompat-v7:26.+'
-    compile group: 'com.google.code.gson', name: 'gson', version: '2.7'
-    compile 'com.salesforce.mobilesdk:SalesforceSDK:5.2.0'
-    compile 'com.salesforce.mobilesdk:SmartStore:5.2.0'
-    compile 'com.salesforce.mobilesdk:SmartSync:5.2.0'
-    compile 'com.squareup.retrofit2:retrofit:2.3.0'
-    compile 'com.squareup.retrofit2:converter-gson:2.3.0'
-    testCompile 'junit:junit:4.12'
+
+    api 'com.squareup.retrofit2:retrofit:2.5.0'
+    api 'com.squareup.retrofit2:converter-jackson:2.5.0'
+    testImplementation 'junit:junit:4.12'
+    api project(path: ':libs:SalesforceSDK')
+    api project(path: ':libs:SmartStore')
+    api project(path: ':libs:MobileSync')
+    api project(path: ':ArcthosSmart')
 }
