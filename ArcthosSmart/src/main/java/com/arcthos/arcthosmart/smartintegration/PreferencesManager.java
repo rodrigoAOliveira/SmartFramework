@@ -3,9 +3,6 @@ package com.arcthos.arcthosmart.smartintegration;
 import android.content.Context;
 import android.content.SharedPreferences;
 
-/**
- * Created by Heitor Araujo on 11/08/2015.
- */
 public class PreferencesManager {
     private static final String PREF_NAME = "SyncPreferences";
 
