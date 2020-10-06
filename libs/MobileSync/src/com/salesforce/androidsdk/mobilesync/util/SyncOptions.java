@@ -44,11 +44,9 @@ public class SyncOptions {
 
 	// Fieldlist really belongs in sync up/down target - keeping it here for backwards compatibility
 	public static final String FIELDLIST = "fieldlist";
-	public static final String FIELDLISTFORUPDATE = "fieldlistforupdate";
 
     private MergeMode mergeMode;
 	private List<String> fieldlist;
-	private List<String> fieldlistForUpdate;
 
 	/**
 	 * Build SyncOptions from json
@@ -63,14 +61,7 @@ public class SyncOptions {
         String mergeModeStr = JSONObjectHelper.optString(options, MERGEMODE);
         MergeMode mergeMode = mergeModeStr == null ? null : MergeMode.valueOf(mergeModeStr);
 		List<String> fieldlist = JSONObjectHelper.toList(options.optJSONArray(FIELDLIST));
-		List<String> fieldlistforupdate;
-
-		try {
-			fieldlistforupdate = JSONObjectHelper.toList(options.optJSONArray(FIELDLISTFORUPDATE));
-			return new SyncOptions(fieldlist, fieldlistforupdate, mergeMode);
-		} catch (Exception e) {
-			return new SyncOptions(fieldlist, mergeMode);
-		}
+		return new SyncOptions(fieldlist, mergeMode);
 	}
 
 	/**
@@ -90,16 +81,6 @@ public class SyncOptions {
         return new SyncOptions(fieldlist, mergeMode);
     }
 
-	/**
-	 * @param fieldlist
-	 * @param fieldlistForUpdate
-	 * @param mergeMode
-	 * @return
-	 */
-	public static SyncOptions optionsForSyncUp(List<String> fieldlist, List<String> fieldlistForUpdate, MergeMode mergeMode) {
-		return new SyncOptions(fieldlist, fieldlistForUpdate, mergeMode);
-	}
-
     /**
      * @param mergeMode
      * @return
@@ -117,18 +98,7 @@ public class SyncOptions {
 		this.fieldlist = fieldlist;
         this.mergeMode = mergeMode;
 	}
-
-	/**
-	 * Private constructor
-	 * @param fieldlist
-	 * @param mergeMode
-	 */
-	private SyncOptions(List<String> fieldlist, List<String> fieldlistForUpdate, MergeMode mergeMode) {
-		this.fieldlist = fieldlist;
-		this.mergeMode = mergeMode;
-		this.fieldlistForUpdate = fieldlistForUpdate;
-	}
-
+	
 	/**
 	 * @return json representation of target
 	 * @throws JSONException
@@ -137,16 +107,11 @@ public class SyncOptions {
 		JSONObject options = new JSONObject();
         if (mergeMode != null) options.put(MERGEMODE, mergeMode.name());
 		if (fieldlist != null) options.put(FIELDLIST, new JSONArray(fieldlist));
-		if (fieldlistForUpdate != null) options.put(FIELDLISTFORUPDATE, new JSONArray(fieldlistForUpdate));
 		return options;
 	}
 
 	public List<String> getFieldlist() {
 		return fieldlist;
-	}
-
-	public List<String> getFieldlistForUpdate() {
-		return fieldlistForUpdate;
 	}
 
     public MergeMode getMergeMode() {

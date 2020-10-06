@@ -49,9 +49,9 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Provides an easy way to fetch metadata using {@link com.salesforce.androidsdk.mobilesync.target.MetadataSyncDownTarget}.
+ * Provides an easy way to fetch metadata using {@link MetadataSyncDownTarget}.
  * This class handles creating a soup, storing synched data and reading it into
- * a meaningful data structure, i.e. {@link com.salesforce.androidsdk.mobilesync.model.Metadata}.
+ * a meaningful data structure, i.e. {@link Metadata}.
  *
  * @author bhariharan
  */
@@ -175,7 +175,7 @@ public class MetadataSyncManager {
      * mode and triggers the supplied callback once complete.
      *
      * @param objectType Object type.
-     * @param mode Fetch mode. See {@link com.salesforce.androidsdk.mobilesync.util.Constants.Mode} for available modes.
+     * @param mode Fetch mode. See {@link Constants.Mode} for available modes.
      * @param syncCallback Metadata sync callback.
      */
     public void fetchMetadata(String objectType, Constants.Mode mode,

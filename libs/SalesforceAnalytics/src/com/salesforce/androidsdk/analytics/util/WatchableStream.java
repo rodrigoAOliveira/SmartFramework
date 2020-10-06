@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2012-present, salesforce.com, inc.
+ * Copyright (c) 2020-present, salesforce.com, inc.
  * All rights reserved.
  * Redistribution and use of this software in source and binary forms, with or
  * without modification, are permitted provided that the following conditions
@@ -24,64 +24,15 @@
  * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
  * POSSIBILITY OF SUCH DAMAGE.
  */
-package com.salesforce.androidsdk.ui;
 
-import android.app.Activity;
-import android.os.Bundle;
-import android.view.KeyEvent;
+package com.salesforce.androidsdk.analytics.util;
 
-/**
- * Abstract base class for all Salesforce activities.
- */
-public abstract class SalesforceActivity extends Activity implements SalesforceActivityInterface {
+/** Interface for stream that can be watched (on close etc) */
+public interface WatchableStream {
 
-	private final SalesforceActivityDelegate delegate;
+    void addWatcher(Watcher watcher);
 
-	public SalesforceActivity() {
-		super();
-		this.delegate = new SalesforceActivityDelegate(this);
-	}
-
-	@Override
-	protected void onCreate(Bundle savedInstanceState) {
-		super.onCreate(savedInstanceState);
-		delegate.onCreate();
-	}
-
-	@Override 
-	public void onResume() {
-		super.onResume();
-		delegate.onResume(true);
-	}
-
-	@Override
-	public void onUserInteraction() {
-		delegate.onUserInteraction();
-	}
-
-    @Override
-    public void onPause() {
-        super.onPause();
-		delegate.onPause();
+    interface Watcher {
+        void onClose();
     }
-
-    @Override
-    public void onDestroy() {
-		delegate.onDestroy();
-    	super.onDestroy();
-    }
-
-    @Override
-	public boolean onKeyUp(int keyCode, KeyEvent event) {
-		return delegate.onKeyUp(keyCode, event) || super.onKeyUp(keyCode, event);
-	}
-
-    @Override
-    public void onLogoutComplete() {
-    }
-
-	@Override
-	public void onUserSwitched() {
-		delegate.onResume(true);
-	}
 }
