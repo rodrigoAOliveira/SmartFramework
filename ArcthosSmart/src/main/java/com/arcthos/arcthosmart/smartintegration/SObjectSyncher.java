@@ -3,6 +3,7 @@ package com.arcthos.arcthosmart.smartintegration;
 import android.content.res.Resources;
 import android.util.Log;
 
+import com.arcthos.arcthosmart.R;
 import com.arcthos.arcthosmart.annotations.DestinationLocalParent;
 import com.arcthos.arcthosmart.annotations.SObject;
 import com.arcthos.arcthosmart.annotations.SourceLocalParent;
@@ -46,9 +47,6 @@ import java.util.TimeZone;
  */
 
 public class SObjectSyncher<T extends SmartObject> {
-
-    public static final Integer LIMIT = 50000;
-
     private final UserAccount currentUser;
     private final SmartStore smartStore;
     private final SyncManager syncMgr;
@@ -205,7 +203,7 @@ public class SObjectSyncher<T extends SmartObject> {
                         getInstanceWithFields(fieldsSyncDown)
                         .from(sObjectName)
                         .where(where)
-                        .limit(LIMIT).build();
+                        .limit(resources.getInteger(R.integer.soql_query_limit)).build();
                 Log.d(sObjectName + "::QUERY SOQL:", soqlQuery);
                 final SyncDownTarget target = new SoqlSyncDownTarget(soqlQuery);
 
