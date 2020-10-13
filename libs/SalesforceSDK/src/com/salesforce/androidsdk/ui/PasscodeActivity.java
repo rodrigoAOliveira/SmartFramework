@@ -162,8 +162,6 @@ public class PasscodeActivity extends Activity {
         passcodeField.announceForAccessibility(bioInstrTitle.getText());
         biometricBox = findViewById(R.id.sf__biometric_box);
         notNowButton = findViewById(R.id.sf__biometric_not_now_button);
-        notNowButton.setTextColor(getResources().getColor(isDarkTheme ? R.color.sf__secondary_color_dark
-                : R.color.sf__primary_color, null));
         notNowButton.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -261,6 +259,7 @@ public class PasscodeActivity extends Activity {
             instr.setVisibility(View.VISIBLE);
             passcodeBox.setVisibility(View.VISIBLE);
             passcodeField.setVisibility(View.VISIBLE);
+            passcodeField.requestFocus();
 
             if (!passcodeManager.getPasscodeLengthKnown()) {
                 verifyButton.setVisibility(View.VISIBLE);
@@ -568,7 +567,7 @@ public class PasscodeActivity extends Activity {
         final FingerprintManager fingerprintManager = (FingerprintManager) this.getSystemService(Context.FINGERPRINT_SERVICE);
 
         // Here, this activity is the current activity.
-        if (checkSelfPermission(Manifest.permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
+        if (checkSelfPermission(permission.USE_FINGERPRINT) != PackageManager.PERMISSION_GRANTED) {
             requestPermissions(new String[]{ permission.USE_FINGERPRINT}, REQUEST_CODE_ASK_PERMISSIONS);
         } else {
             return fingerprintManager != null && fingerprintManager.isHardwareDetected()
