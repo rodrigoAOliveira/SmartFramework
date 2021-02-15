@@ -15,4 +15,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface DestinationLocalParent {
     Class<? extends SmartObject> value();
+
+    String relationshipName() default "";
 }

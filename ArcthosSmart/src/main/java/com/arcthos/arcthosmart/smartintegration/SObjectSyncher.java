@@ -16,7 +16,6 @@ import com.arcthos.arcthosmart.smartorm.repository.Repository;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.salesforce.androidsdk.accounts.UserAccount;
 import com.salesforce.androidsdk.mobilesync.app.MobileSyncSDKManager;
-import com.salesforce.androidsdk.smartstore.store.SmartStore;
 import com.salesforce.androidsdk.mobilesync.manager.SyncManager;
 import com.salesforce.androidsdk.mobilesync.target.SoqlSyncDownTarget;
 import com.salesforce.androidsdk.mobilesync.target.SyncDownTarget;
@@ -25,6 +24,7 @@ import com.salesforce.androidsdk.mobilesync.util.Constants;
 import com.salesforce.androidsdk.mobilesync.util.SOQLBuilder;
 import com.salesforce.androidsdk.mobilesync.util.SyncOptions;
 import com.salesforce.androidsdk.mobilesync.util.SyncState;
+import com.salesforce.androidsdk.smartstore.store.SmartStore;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -275,20 +275,24 @@ public class SObjectSyncher<T extends SmartObject> {
         }
 
         for (Field source : sourceFields) {
+            String sourceRelationshipName = "";
             Class<? extends SmartObject> sourceClass = null;
             for (Annotation annotation : source.getAnnotations()) {
                 if (annotation instanceof SourceLocalParent) {
                     sourceClass = ((SourceLocalParent) annotation).value();
+                    sourceRelationshipName = ((SourceLocalParent) annotation).relationshipName();
                     break;
                 }
             }
 
             for (Field destination : destinationFields) {
                 Class<? extends SmartObject> destinationClass = null;
+                String destionationRelationshipName = "";
                 String fieldName = "";
                 for (Annotation annotation : destination.getAnnotations()) {
                     if (annotation instanceof DestinationLocalParent) {
                         destinationClass = ((DestinationLocalParent) annotation).value();
+                        destionationRelationshipName = ((DestinationLocalParent) annotation).relationshipName();
                     }
 
                     if (annotation instanceof JsonProperty) {
@@ -296,7 +300,8 @@ public class SObjectSyncher<T extends SmartObject> {
                     }
                 }
 
-                if (sourceClass != null && destinationClass != null && !fieldName.equals("") && sourceClass == destinationClass) {
+                if (sourceClass != null && destinationClass != null && !fieldName.equals("")
+                        && sourceClass == destinationClass && sourceRelationshipName.equals(destionationRelationshipName)) {
                     destinationBySource.put(source.getName(), fieldName);
                     sourceClassBySourceFieldName.put(source.getName(), sourceClass);
                     break;
