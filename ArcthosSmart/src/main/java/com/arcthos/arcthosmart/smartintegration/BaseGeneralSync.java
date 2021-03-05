@@ -89,11 +89,15 @@ public abstract class BaseGeneralSync {
 
     protected abstract void syncChainedObjects();
 
+
     public void setLastDateUpdate() {
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-        PreferencesManager.getInstance().setValue(LAST_SYNC, sdf.format(new Date()));
+        Calendar calendar = Calendar.getInstance(TimeZone.getTimeZone("UTC"));
+        calendar.add(Calendar.MINUTE, -5);
+
+        PreferencesManager.getInstance().setValue(LAST_SYNC, sdf.format(calendar.getTime()));
     }
 
     protected void syncObject(Class<? extends SmartObject> model) {
