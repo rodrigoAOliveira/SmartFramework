@@ -108,6 +108,14 @@ public abstract class BaseGeneralSync {
         new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
     }
 
+    protected void syncObject(Class<? extends SmartObject> model, String limit) {
+        SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
+        String where = Constants.LAST_MODIFIED_DATE + ">" + formattedLastUpdate + " " + getCustomWhere(model);
+        sObjectSyncher.setWhere(where);
+        sObjectSyncher.setLimit(limit);
+
+        new SyncObjectTask(sObjectSyncher).executeOnExecutor(THREAD_POOL_EXECUTOR);
+    }
     protected void syncFullObject(Class<? extends SmartObject> model) {
         SObjectSyncher sObjectSyncher = new SObjectSyncher(model, context.getResources(), syncCallback, false);
         String where = getCustomWhere(model);

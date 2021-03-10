@@ -57,6 +57,7 @@ public class SObjectSyncher<T extends SmartObject> {
     private final SyncCallback syncCallback;
     private final Resources resources;
     private final boolean chainedSync;
+    private String limit ="50000";
 
     public SObjectSyncher(final Class<T> type, final Resources resources, final SyncCallback syncCallback, boolean chainedSync) {
         this.currentUser = MobileSyncSDKManager.getInstance().getUserAccountManager().getCurrentUser();
@@ -203,7 +204,7 @@ public class SObjectSyncher<T extends SmartObject> {
                         getInstanceWithFields(fieldsSyncDown)
                         .from(sObjectName)
                         .where(where)
-                        .limit(resources.getInteger(R.integer.soql_query_limit)).build();
+                        .limit(Integer.valueOf(limit)).build();
                 Log.d(sObjectName + "::QUERY SOQL:", soqlQuery);
                 final SyncDownTarget target = new SoqlSyncDownTarget(soqlQuery);
 
@@ -325,5 +326,9 @@ public class SObjectSyncher<T extends SmartObject> {
         }
 
         return "";
+    }
+
+    public void setLimit(String limit) {
+        this.limit = limit;
     }
 }
