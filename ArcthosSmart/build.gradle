@@ -9,6 +9,7 @@ buildscript {
 }
 
 apply plugin: 'com.android.library'
+apply plugin: 'kotlin-android'
 apply plugin: 'com.github.dcendents.android-maven'
 
 android {
@@ -48,6 +49,8 @@ dependencies {
     api project(path: ':libs:SalesforceSDK')
     api project(path: ':libs:SmartStore')
     api project(path: ':libs:MobileSync')
+    implementation "androidx.core:core-ktx:+"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
 }
 
 install {
@@ -66,4 +69,7 @@ install {
             }
         }
     }
+}
+repositories {
+    mavenCentral()
 }
