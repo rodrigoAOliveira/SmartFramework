@@ -1,4 +1,4 @@
-package com.arcthos.arcthosmart.smart
+package com.arcthos.arcthosmart.smartintegration
 
 import com.arcthos.arcthosmart.annotations.SObject
 import com.arcthos.arcthosmart.smartorm.SmartObject
