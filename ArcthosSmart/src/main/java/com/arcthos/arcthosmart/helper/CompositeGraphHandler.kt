@@ -1,6 +1,5 @@
 package com.arcthos.arcthosmart.helper
 
-import com.arcthos.arcthosmart.smartorm.GeneralConstants
 import com.arcthos.arcthosmart.smartorm.SmartObject
 import com.google.gson.Gson
 import com.google.gson.JsonObject
@@ -11,6 +10,7 @@ import com.arcthos.arcthosmart.helper.CompositeRequestHelper.prepareGraphs
 import com.arcthos.arcthosmart.model.compositeRequest.CompositeRequest
 import com.arcthos.arcthosmart.model.compositeRequest.CompositeRequestConstants
 import com.arcthos.arcthosmart.model.graphRequest.GraphRequest
+import java.util.*
 
 class CompositeGraphHandler {
 
