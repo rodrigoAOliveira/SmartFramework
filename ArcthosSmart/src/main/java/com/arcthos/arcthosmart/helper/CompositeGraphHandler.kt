@@ -143,7 +143,7 @@ class CompositeGraphHandler {
     }
 
     private fun prepareURL(className : String, method : String, id : String) : String{
-        var url = CompositeRequestConstants.BASE_URL + className + "TESTEZAO"
+        var url = CompositeRequestConstants.BASE_URL + className
         if(method == CompositeRequestConstants.METHOD_PATCH ||
             method == CompositeRequestConstants.METHOD_DELETE)
             url += "/$id"
