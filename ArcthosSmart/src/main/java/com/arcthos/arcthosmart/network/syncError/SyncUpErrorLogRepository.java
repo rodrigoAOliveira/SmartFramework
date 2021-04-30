@@ -1,5 +1,7 @@
 package com.arcthos.arcthosmart.network.syncError;
 
+import com.arcthos.arcthosmart.model.syncerror.SyncUpErrorLog;
+import com.arcthos.arcthosmart.model.syncerror.SyncUpErrorLogConstants;
 import com.arcthos.arcthosmart.smartintegration.helpers.ModelBuildingHelper;
 import com.arcthos.arcthosmart.smartorm.Condition;
 import com.arcthos.arcthosmart.smartorm.SmartObject;
@@ -16,10 +18,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import javax.inject.Inject;
-
-import topi.androidsalesforceseedkt.model.syncerror.SyncUpErrorLog;
-import topi.androidsalesforceseedkt.model.syncerror.SyncUpErrorLogConstants;
-
 
 public class SyncUpErrorLogRepository extends Repository<SyncUpErrorLog> {
 

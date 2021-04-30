@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">ArcthosSmart</string>
+    <string name="tv_money">R$ %s</string>
+    <string name="tv_percentage">%s%%</string>
+    <string name="tv_weight_kg">%s Kg</string>
+    <string name="choose_an_option">Escolha uma opção</string>
+    <string name="yes">Sim</string>
+    <string name="no">Não</string>
 </resources>

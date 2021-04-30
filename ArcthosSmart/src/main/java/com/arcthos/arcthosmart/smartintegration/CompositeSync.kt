@@ -32,7 +32,7 @@ import java.io.IOException
 import java.text.SimpleDateFormat
 import java.util.*
 
-class CompositeUpload(
+class CompositeSync(
     private val models: List<Class<out SmartObject>>,
     private val userAccount: UserAccount,
     private val smartStore: SmartStore,
