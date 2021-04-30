@@ -217,8 +217,9 @@ public class SmartSelect<T> implements Iterable {
         try {
             JSONArray results = smartStore.query(querySpec, 0);
             JSONArray tmpResults = new JSONArray();
+            int totalResults = results.length();
 
-            for (int i = 0; i < results.length(); i++) {
+            for (int i = 0; i < totalResults; i++) {
                 tmpResults.put(results.getJSONArray(i).getJSONObject(0));
             }
 

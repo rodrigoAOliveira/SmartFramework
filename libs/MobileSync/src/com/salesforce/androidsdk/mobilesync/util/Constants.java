@@ -83,7 +83,7 @@ public class Constants {
     /**
      * Salesforce timestamp format.
      */
-    public static final DateFormat TIMESTAMP_FORMAT = RestRequest.ISO8601_DATE_FORMAT;
+    public static final DateFormat TIMESTAMP_FORMAT = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSSZ", Locale.US);
 
     /**
      * Enum for available data fetch modes.
