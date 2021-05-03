@@ -173,9 +173,10 @@ class CompositeSync(
     }
 
     private fun jsonCompositeCall(graphs: List<GraphRequest>){
-
-        if(graphs.isEmpty() || retrofit == null)
+        if(graphs.isEmpty() || retrofit == null) {
+            completed = true
             return
+        }
 
         val envelopeGraphs = EnvelopeGraphRequest()
         envelopeGraphs.graphs = graphs
@@ -209,6 +210,8 @@ class CompositeSync(
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
+                completed = true
+                uploadSuccess = false
                 Timber.d(call.toString())
             }
         })
