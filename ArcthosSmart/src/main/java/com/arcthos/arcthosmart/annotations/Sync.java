@@ -11,6 +11,6 @@ import java.lang.annotation.Target;
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Sync {
-    boolean up() default true;
+    boolean up() default false;
     boolean down() default true;
 }
