@@ -1,5 +1,8 @@
 package com.arcthos.arcthosmart.helper;
 
+import java.text.Normalizer;
+import java.util.Optional;
+
 /**
  * Created by Vinicius Damiati on 11-Dec-17.
  */
@@ -18,5 +21,10 @@ public class StringHelper {
         String decimal = value.split("\\.").length > 1 ? value.split("\\.")[1] : "";
 
         return integer + "." + (decimal.length() > 2 ? decimal.substring(0, 2) : decimal);
+    }
+
+    public static String removeDiacriticalMarks(String string) {
+        return Normalizer.normalize(string, Normalizer.Form.NFD)
+                .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
     }
 }
