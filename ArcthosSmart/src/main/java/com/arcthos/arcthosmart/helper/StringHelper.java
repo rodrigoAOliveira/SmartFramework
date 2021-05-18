@@ -1,6 +1,7 @@
 package com.arcthos.arcthosmart.helper;
 
 import java.text.Normalizer;
+import java.util.Locale;
 import java.util.Optional;
 
 /**
@@ -26,5 +27,11 @@ public class StringHelper {
     public static String removeDiacriticalMarks(String string) {
         return Normalizer.normalize(string, Normalizer.Form.NFD)
                 .replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+    }
+
+    public static  String getFilterText(String text){
+        if( text == null )
+             return "";
+        return StringHelper.removeDiacriticalMarks(text.toLowerCase(Locale.ROOT));
     }
 }
