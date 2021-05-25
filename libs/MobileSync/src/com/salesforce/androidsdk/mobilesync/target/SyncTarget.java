@@ -71,7 +71,7 @@ public abstract class SyncTarget {
     private static final String TAG = "SyncTarget";
 
     // Page size used when reading from smartstore
-    private static final int PAGE_SIZE = 2000;
+    private static final int PAGE_SIZE = 950;
 
     public static final String ANDROID_IMPL = "androidImpl";
     public static final String ID_FIELD_NAME = "idFieldName";
