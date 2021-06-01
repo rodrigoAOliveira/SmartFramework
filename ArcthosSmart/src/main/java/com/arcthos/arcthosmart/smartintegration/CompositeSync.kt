@@ -45,6 +45,7 @@ class CompositeSync(
     var error = ""
     var uploadSuccess = true
     var completed = false
+    var lastRequest = false
 
     fun doCompositeUpload(allModels: List<List<Class<out SmartObject>>>) {
 
@@ -58,13 +59,22 @@ class CompositeSync(
             var isDownloaded = false
             var graphPosition = 0
 
+            lastRequest = (i == allModels.indices.last)
+
             parent.annotations.forEach {
                 if(it is SObject && smartStore.hasSoup(it.value))
                     isDownloaded = true
             }
 
-            if(!isDownloaded || parentJsonArray.length() == 0) {
+            if(!isDownloaded) {
                 completed = true
+                break
+            }
+
+            if (parentJsonArray.length() == 0){
+                if (lastRequest){
+                    completed = true
+                }
                 break
             }
 
@@ -90,7 +100,6 @@ class CompositeSync(
 
             jsonCompositeCall(cgh.jsonGraphs())
         }
-
     }
 
     private fun addChildCompositeRequest(model: Class<out SmartObject>, cgh: CompositeGraphHandler) {
@@ -176,7 +185,9 @@ class CompositeSync(
 
     private fun jsonCompositeCall(graphs: List<GraphRequest>){
         if(graphs.isEmpty() || retrofit == null) {
-            completed = true
+            if(lastRequest) {
+                completed = true
+            }
             return
         }
 
@@ -208,11 +219,15 @@ class CompositeSync(
                         updateByResponse(cr)
                     }
                 }
-                completed = true
+                if(lastRequest) {
+                    completed = true
+                }
             }
 
             override fun onFailure(call: Call<JsonObject>, t: Throwable) {
-                completed = true
+                if(lastRequest) {
+                    completed = true
+                }
                 uploadSuccess = false
                 Timber.d(call.toString())
             }
