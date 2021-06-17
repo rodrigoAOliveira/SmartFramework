@@ -33,10 +33,9 @@ import java.text.SimpleDateFormat
 import java.util.*
 
 class CompositeSync(
-        private val models: List<Class<out SmartObject>>,
-        private val userAccount: UserAccount,
-        private val smartStore: SmartStore,
-        private val syncUpErrorLogRepository: SyncUpErrorLogRepository
+    private val userAccount: UserAccount,
+    private val smartStore: SmartStore,
+    private val syncUpErrorLogRepository: SyncUpErrorLogRepository
 ) {
     private val retrofit = createRetrofit()
     private val gson = Gson()
@@ -83,11 +82,11 @@ class CompositeSync(
 
                 cgh.addGraph(graphPosition + 1)
                 if (cgh.addParentCompositeRequest(
-                                graphPosition,
-                                parentJsonObject.toString(),
-                                parent,
-                                parentCalculatedFields
-                        )){
+                        graphPosition,
+                        parentJsonObject.toString(),
+                        parent,
+                        parentCalculatedFields
+                    )){
                     graphPosition++
                 }
             }
@@ -98,7 +97,7 @@ class CompositeSync(
                 }
             }
 
-            jsonCompositeCall(cgh.jsonGraphs())
+            jsonCompositeCall(cgh.jsonGraphs(), allModels[i])
         }
     }
 
@@ -122,12 +121,12 @@ class CompositeSync(
             if(cgh.jsonGraphs().isEmpty()){
                 cgh.addGraph(1)
                 cgh.addChildCompositeRequestSynchedParent(
-                        0,
-                        parentId,
-                        o.toString(),
-                        model,
-                        referenceField,
-                        calculatedFields
+                    0,
+                    parentId,
+                    o.toString(),
+                    model,
+                    referenceField,
+                    calculatedFields
                 )
                 continue
             }
@@ -138,7 +137,7 @@ class CompositeSync(
                 if(parentId.length <= 18){
                     for(cr in graph.compositeRequests){
                         if((cr.url.contains(getSoup(model)) && cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
-                                (cr.url.contains(referencedClassName) && cr.referenceId == parentId)){
+                            (cr.url.contains(referencedClassName) && cr.referenceId == parentId)){
                             graphPosition = graphId
                             success = true
                             break
@@ -149,19 +148,19 @@ class CompositeSync(
 
                 for(cr in graph.compositeRequests){
                     if(cr.url.contains(referencedClassName) &&
-                            CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId){
+                        CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId){
                         success = true
                         break
                     }
                 }
                 if(success){
                     cgh.addChildCompositeRequest(
-                            graphId,
-                            CompositeRequestHelper.transformToReferenceId(parentId),
-                            o.toString(),
-                            model,
-                            referenceField,
-                            calculatedFields
+                        graphId,
+                        CompositeRequestHelper.transformToReferenceId(parentId),
+                        o.toString(),
+                        model,
+                        referenceField,
+                        calculatedFields
                     )
                     break
                 }
@@ -172,18 +171,18 @@ class CompositeSync(
                     cgh.addGraph(graphPosition + 1)
 
                 cgh.addChildCompositeRequestSynchedParent(
-                        graphPosition,
-                        parentId,
-                        o.toString(),
-                        model,
-                        referenceField,
-                        calculatedFields
+                    graphPosition,
+                    parentId,
+                    o.toString(),
+                    model,
+                    referenceField,
+                    calculatedFields
                 )
             }
         }
     }
 
-    private fun jsonCompositeCall(graphs: List<GraphRequest>){
+    private fun jsonCompositeCall(graphs: List<GraphRequest>, models: List<Class<out SmartObject>>){
         if(graphs.isEmpty() || retrofit == null) {
             if(lastRequest) {
                 completed = true
@@ -216,7 +215,7 @@ class CompositeSync(
                 val graphResponse = gson.fromJson(response, EnvelopeResponseGraphs::class.java)
                 graphResponse.graphs.forEach {
                     it.graphResponses.compositeResponse.forEach { cr ->
-                        updateByResponse(cr)
+                        updateByResponse(cr, models)
                     }
                 }
                 if(lastRequest) {
@@ -234,7 +233,7 @@ class CompositeSync(
         })
     }
 
-    private fun updateByResponse(cr: CompositeResponse) {
+    private fun updateByResponse(cr: CompositeResponse, models: List<Class<out SmartObject>>) {
         lateinit var body: JsonObject
         val jsonResponse = gson.toJson(cr)
 
@@ -263,33 +262,35 @@ class CompositeSync(
             uploadSuccess = false
             return
         } else {
-            Timber.i("CompositeRequest unsuccessful. CompositeResponse: %s", jsonResponse)
+            Timber.i("CompositeRequest successful. CompositeResponse: %s", jsonResponse)
         }
 
         models.forEach { model ->
             val name = getSoup(model)
-            if(name.isNotEmpty() && location.asString.contains(name))
+            val objectName = location.asString.split("/").toTypedArray()
+
+            if(name.isNotEmpty() && objectName[5] == name)
                 updateObject(name, model, referenceId)
         }
     }
 
     private fun updateObject(
-            name: String,
-            smartObject: Class<out SmartObject>,
-            referenceId: String
+        name: String,
+        smartObject: Class<out SmartObject>,
+        referenceId: String
     ) {
 
         val repository = object : Repository<SmartObject>(
-                smartStore,
-                smartObject as Class<SmartObject>
+            smartStore,
+            smartObject as Class<SmartObject>
         ) {}
 
         val it = repository.find(referenceId)
 
         smartStore.update(
-                name,
-                toJSONObject(it),
-                it.soupEntryId
+            name,
+            toJSONObject(it),
+            it.soupEntryId
         )
 
         repository.delete(it)
@@ -314,21 +315,21 @@ class CompositeSync(
             return null
 
         val okHttpClient: OkHttpClient =
-                OkHttpClient().newBuilder().addInterceptor {
-                    val originalRequest = it.request()
-                    val builder = originalRequest.newBuilder().header(
-                            "Authorization",
-                            "Bearer " + userAccount.authToken
-                    )
-                    val newRequest = builder.build()
-                    it.proceed(newRequest)
-                }.build()
+            OkHttpClient().newBuilder().addInterceptor {
+                val originalRequest = it.request()
+                val builder = originalRequest.newBuilder().header(
+                    "Authorization",
+                    "Bearer " + userAccount.authToken
+                )
+                val newRequest = builder.build()
+                it.proceed(newRequest)
+            }.build()
 
         return Retrofit.Builder()
-                .client(okHttpClient)
-                .baseUrl(userAccount.instanceServer)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build()
+            .client(okHttpClient)
+            .baseUrl(userAccount.instanceServer)
+            .addConverterFactory(GsonConverterFactory.create())
+            .build()
     }
 
     private fun syncUpErrorLog(errorType: String) {
@@ -364,9 +365,9 @@ class CompositeSync(
 
         if (!model.isAnnotationPresent(SObject::class.java)) {
             Timber.e(
-                    SmartObject::class.java.simpleName,
-                    "SObject annotation missing in model class: %s",
-                    name
+                SmartObject::class.java.simpleName,
+                "SObject annotation missing in model class: %s",
+                name
             )
             return JSONArray()
         }
