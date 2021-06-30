@@ -80,7 +80,6 @@ class CompositeSync(
             for (j in 0 until parentJsonArray.length()) {
                 val parentJsonObject = parentJsonArray.getJSONArray(j)[0] as JSONObject
 
-                cgh.addGraph(graphPosition + 1)
                 if (cgh.addParentCompositeRequest(
                         graphPosition,
                         parentJsonObject.toString(),
@@ -95,6 +94,8 @@ class CompositeSync(
                 for(j in allModels[i].indices){
                     addChildCompositeRequest(allModels[i][j], cgh)
                 }
+            } else if (cgh.parentsWithReference.isNotEmpty()) {
+                addChildCompositeRequest(parent, cgh)
             }
 
             jsonCompositeCall(cgh.jsonGraphs(), allModels[i])
@@ -102,7 +103,6 @@ class CompositeSync(
     }
 
     private fun addChildCompositeRequest(model: Class<out SmartObject>, cgh: CompositeGraphHandler) {
-
         val referenceField = CompositeRequestHelper.getReferenceField(model)
 
         if(referenceField.isEmpty())
@@ -136,7 +136,8 @@ class CompositeSync(
 
                 if(parentId.length <= 18){
                     for(cr in graph.compositeRequests){
-                        if((cr.url.contains(getSoup(model)) && cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
+                        if((cr.url.contains(getSoup(model)) && cr.body[referenceField] != null &&
+                                    cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
                             (cr.url.contains(referencedClassName) && cr.referenceId == parentId)){
                             graphPosition = graphId
                             success = true
@@ -218,7 +219,7 @@ class CompositeSync(
                         updateByResponse(cr, models)
                     }
                 }
-                if(lastRequest) {
+                if (lastRequest) {
                     completed = true
                 }
             }

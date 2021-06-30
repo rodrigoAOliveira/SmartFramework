@@ -16,6 +16,7 @@ class CompositeGraphHandler {
 
     private val gson = Gson()
     private val graphs = ArrayList<GraphRequest>()
+    val parentsWithReference = ArrayList<JsonObject>()
 
     fun addGraph(graphId : Int){
         val g = GraphRequest(graphId, arrayListOf())
@@ -37,26 +38,38 @@ class CompositeGraphHandler {
         val id = getIdFromJsonObject(jsonObject)
         val className = smartObject.simpleName
         val method = getMethodFromJson(jsonObject, id)
+        val position = 0
 
         if(method.isEmpty()){
-            graphs.removeAt(graphPosition)
             return false
         }
 
-        for(field in smartObject.declaredFields){
-            val name = getJsonPropertyName(field)
+        val referenceField = CompositeRequestHelper.getReferenceField(smartObject)
 
-            if(calculatedFields.contains(name))
-                jsonObject.remove(name)
+        if (referenceField.isNotEmpty() && jsonObject[referenceField] != null) {
+            if (jsonObject[referenceField].toString() == "null"){
+                jsonObject.remove(referenceField)
+            } else {
+                jsonObject.addProperty(
+                    referenceField,
+                    "@{" + jsonObject[referenceField].toString() + ".id}"
+                )
+                parentsWithReference.add(jsonObject)
+                return true
+            }
         }
 
-        graphs[graphPosition].compositeRequests.add(
-            CompositeRequest(
-                method,
-                id,
-                jsonObject,
-                prepareURL(className, method, id)
-            )
+        if (position == 0)
+            addGraph(graphPosition + 1)
+
+        addCompositeRequestToGraph(
+            smartObject,
+            calculatedFields,
+            jsonObject,
+            graphPosition,
+            method,
+            id,
+            className
         )
 
         return true
@@ -84,9 +97,30 @@ class CompositeGraphHandler {
         else
             return
 
-        for(field in smartObject.declaredFields){
+        addCompositeRequestToGraph(
+            smartObject,
+            calculatedFields,
+            jsonObject,
+            graphPosition,
+            method,
+            id,
+            className
+        )
+
+    }
+
+    private fun addCompositeRequestToGraph(
+        smartObject: Class<out SmartObject>,
+        calculatedFields: List<String>,
+        jsonObject: JsonObject,
+        graphPosition: Int,
+        method: String,
+        id: String,
+        className: String
+    ) {
+        for (field in smartObject.declaredFields) {
             val name = getJsonPropertyName(field)
-            if(calculatedFields.contains(name))
+            if (calculatedFields.contains(name))
                 jsonObject.remove(name)
         }
 
@@ -98,7 +132,6 @@ class CompositeGraphHandler {
                 prepareURL(className, method, id)
             )
         )
-
     }
 
     fun addChildCompositeRequestSynchedParent(
@@ -120,10 +153,13 @@ class CompositeGraphHandler {
             return
         }
 
-        if (jsonObject[referenceField] != null)
+        if (jsonObject[referenceField] != null && jsonObject[referenceField].toString() != "null") {
             jsonObject.addProperty(referenceField, parentId)
-        else
+        } else {
+            if(graphs[graphPosition].compositeRequests.isEmpty())
+                graphs.removeAt(graphPosition)
             return
+        }
 
         for(field in smartObject.declaredFields){
             val name = getJsonPropertyName(field)
