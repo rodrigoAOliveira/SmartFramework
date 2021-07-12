@@ -1,12 +1,8 @@
-package com.arcthos.arcthosmart.helper
+import com.arcthos.arcthosmart.helper.CompositeRequestHelper
 
 import com.arcthos.arcthosmart.smartorm.SmartObject
 import com.google.gson.Gson
 import com.google.gson.JsonObject
-import com.arcthos.arcthosmart.helper.CompositeRequestHelper.getIdFromJsonObject
-import com.arcthos.arcthosmart.helper.CompositeRequestHelper.getJsonPropertyName
-import com.arcthos.arcthosmart.helper.CompositeRequestHelper.getMethodFromJson
-import com.arcthos.arcthosmart.helper.CompositeRequestHelper.prepareGraphs
 import com.arcthos.arcthosmart.model.compositeRequest.CompositeRequest
 import com.arcthos.arcthosmart.model.compositeRequest.CompositeRequestConstants
 import com.arcthos.arcthosmart.model.graphRequest.GraphRequest
@@ -24,20 +20,20 @@ class CompositeGraphHandler {
     }
 
     fun jsonGraphs(): List<GraphRequest>{
-        prepareGraphs(graphs.toList())
+        CompositeRequestHelper.prepareGraphs(graphs.toList())
         return graphs
     }
 
-    fun addParentCompositeRequest(
+    fun addCompositeRequest(
         graphPosition: Int,
         json: String,
         smartObject: Class<out SmartObject>,
         calculatedFields: List<String>) : Boolean{
 
         val jsonObject = gson.fromJson(json, JsonObject::class.java)
-        val id = getIdFromJsonObject(jsonObject)
+        val id = CompositeRequestHelper.getIdFromJsonObject(jsonObject)
         val className = smartObject.simpleName
-        val method = getMethodFromJson(jsonObject, id)
+        val method = CompositeRequestHelper.getMethodFromJson(jsonObject, id)
         val position = 0
 
         if(method.isEmpty()){
@@ -84,18 +80,19 @@ class CompositeGraphHandler {
         calculatedFields: List<String> ){
 
         val jsonObject = gson.fromJson(json, JsonObject::class.java)
-        val id = getIdFromJsonObject(jsonObject)
+        val id = CompositeRequestHelper.getIdFromJsonObject(jsonObject)
         val className = smartObject.simpleName
-        val method = getMethodFromJson(jsonObject, id)
+        val method = CompositeRequestHelper.getMethodFromJson(jsonObject, id)
 
         if(method.isEmpty())
             return
 
         if (jsonObject[referenceField] != null && jsonObject[referenceField].toString() ==
-            "\"" + CompositeRequestHelper.transformReferenceId(parentId) + "\"")
+            "\"" + CompositeRequestHelper.transformReferenceId(parentId) + "\"") {
             jsonObject.addProperty(referenceField, "@{$parentId.id}")
-        else
-            return
+        } else {
+            addGraph(graphPosition)
+        }
 
         addCompositeRequestToGraph(
             smartObject,
@@ -119,7 +116,7 @@ class CompositeGraphHandler {
         className: String
     ) {
         for (field in smartObject.declaredFields) {
-            val name = getJsonPropertyName(field)
+            val name = CompositeRequestHelper.getJsonPropertyName(field)
             if (calculatedFields.contains(name))
                 jsonObject.remove(name)
         }
@@ -143,9 +140,9 @@ class CompositeGraphHandler {
         calculatedFields: List<String> ){
 
         val jsonObject = gson.fromJson(json, JsonObject::class.java)
-        val id = getIdFromJsonObject(jsonObject)
+        val id = CompositeRequestHelper.getIdFromJsonObject(jsonObject)
         val className = smartObject.simpleName
-        val method = getMethodFromJson(jsonObject, id)
+        val method = CompositeRequestHelper.getMethodFromJson(jsonObject, id)
 
         if(method.isEmpty()){
             if(graphs[graphPosition].compositeRequests.isEmpty())
@@ -162,7 +159,7 @@ class CompositeGraphHandler {
         }
 
         for(field in smartObject.declaredFields){
-            val name = getJsonPropertyName(field)
+            val name = CompositeRequestHelper.getJsonPropertyName(field)
             if(calculatedFields.contains(name))
                 jsonObject.remove(name)
         }

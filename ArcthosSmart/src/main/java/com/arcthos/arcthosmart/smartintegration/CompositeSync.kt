@@ -1,6 +1,8 @@
 package com.arcthos.arcthosmart.smartintegration
 
+import CompositeGraphHandler
 import com.arcthos.arcthosmart.annotations.SObject
+import com.arcthos.arcthosmart.helper.CompositeRequestHelper
 import com.arcthos.arcthosmart.smartorm.SmartObject
 import com.arcthos.arcthosmart.smartorm.SmartSelect
 import com.arcthos.arcthosmart.smartorm.repository.Repository
@@ -18,8 +20,6 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.gson.GsonConverterFactory
 import timber.log.Timber
-import com.arcthos.arcthosmart.helper.CompositeGraphHandler
-import com.arcthos.arcthosmart.helper.CompositeRequestHelper
 import com.arcthos.arcthosmart.model.compositeResponse.CompositeResponse
 import com.arcthos.arcthosmart.model.graphRequest.EnvelopeGraphRequest
 import com.arcthos.arcthosmart.model.graphRequest.GraphRequest
@@ -46,79 +46,98 @@ class CompositeSync(
     var completed = false
     var lastRequest = false
 
-    fun doCompositeUpload(allModels: List<List<Class<out SmartObject>>>) {
+    fun doCompositeUpload(allModels: List<Class<out SmartObject>>) {
+
+        val cgh = CompositeGraphHandler()
+
+        val firstSoap = allModels[0]
+        val parentJsonArray = prepareJsonArray(firstSoap)
+        var isDownloaded = false
+
+        firstSoap.annotations.forEach {
+            if(it is SObject && smartStore.hasSoup(it.value))
+                isDownloaded = true
+        }
+
+        if(!isDownloaded) {
+            completed = true
+            return
+        }
 
         for (i in allModels.indices){
-
-            val cgh = CompositeGraphHandler()
-
-            val parent = allModels[i][0]
-            val parentJsonArray = prepareJsonArray(parent)
-            val parentCalculatedFields = CompositeRequestHelper.getCalculatedFields(parent)
-            var isDownloaded = false
-            var graphPosition = 0
-
             lastRequest = (i == allModels.indices.last)
-
-            parent.annotations.forEach {
-                if(it is SObject && smartStore.hasSoup(it.value))
-                    isDownloaded = true
-            }
-
-            if(!isDownloaded) {
-                completed = true
-                break
-            }
 
             if (parentJsonArray.length() == 0){
                 if (lastRequest){
                     completed = true
                 }
-                break
+                continue
             }
-
-            for (j in 0 until parentJsonArray.length()) {
-                val parentJsonObject = parentJsonArray.getJSONArray(j)[0] as JSONObject
-
-                if (cgh.addParentCompositeRequest(
-                        graphPosition,
-                        parentJsonObject.toString(),
-                        parent,
-                        parentCalculatedFields
-                    )){
-                    graphPosition++
-                }
-            }
-
-            if(allModels[i].size > 1) {
-                for(j in allModels[i].indices){
-                    addChildCompositeRequest(allModels[i][j], cgh)
-                }
-            } else if (cgh.parentsWithReference.isNotEmpty()) {
-                addChildCompositeRequest(parent, cgh)
-            }
-
-            jsonCompositeCall(cgh.jsonGraphs(), allModels[i])
+            addCompositeGraphs(allModels[i], cgh)
         }
+        jsonCompositeCall(cgh.jsonGraphs(), allModels)
     }
 
-    private fun addChildCompositeRequest(model: Class<out SmartObject>, cgh: CompositeGraphHandler) {
+    private fun addCompositeGraphs(model: Class<out SmartObject>, cgh: CompositeGraphHandler) {
         val referenceField = CompositeRequestHelper.getReferenceField(model)
-
-        if(referenceField.isEmpty())
-            return
 
         val a = prepareJsonArray(model)
         val calculatedFields = CompositeRequestHelper.getCalculatedFields(model)
         val referencedClassName = CompositeRequestHelper.getReferencedClass(model)
 
-        for(i in 0 until a.length()) {
+        var graphPosition =
+            if (cgh.jsonGraphs().isEmpty()) {
+                0
+            } else {
+                cgh.jsonGraphs().size
+            }
+
+        for (j in 0 until a.length()) {
+            val o = a.getJSONArray(j)[0] as JSONObject
+
+            if (cgh.addCompositeRequest(
+                    graphPosition,
+                    o.toString(),
+                    model,
+                    calculatedFields
+                )){
+                graphPosition++
+            }
+        }
+
+        if (cgh.parentsWithReference.isNotEmpty()) {
+            addChildCompositeRequest(
+                a,
+                referenceField,
+                cgh,
+                model,
+                calculatedFields,
+                referencedClassName
+            )
+            cgh.parentsWithReference.clear()
+        }
+    }
+
+    private fun addChildCompositeRequest(
+        a: JSONArray,
+        referenceField: String,
+        cgh: CompositeGraphHandler,
+        model: Class<out SmartObject>,
+        calculatedFields: List<String>,
+        referencedClassName: String
+    ) {
+        for (i in 0 until a.length()) {
             val o = a.getJSONArray(i)[0] as JSONObject
-            val parentId = o.getString(referenceField)
+
+            val parentId =
+                if (referenceField.isEmpty() || referenceField == "null")
+                    ""
+                else
+                    o.getString(referenceField)
             var graphPosition = cgh.jsonGraphs().size
             var success = false
 
-            if(cgh.jsonGraphs().isEmpty()){
+            if (cgh.jsonGraphs().isEmpty()) {
                 cgh.addGraph(1)
                 cgh.addChildCompositeRequestSynchedParent(
                     0,
@@ -131,14 +150,15 @@ class CompositeSync(
                 continue
             }
 
-            for (graphId in cgh.jsonGraphs().indices){
+            for (graphId in cgh.jsonGraphs().indices) {
                 val graph = cgh.jsonGraphs()[graphId]
 
-                if(parentId.length <= 18){
-                    for(cr in graph.compositeRequests){
-                        if((cr.url.contains(getSoup(model)) && cr.body[referenceField] != null &&
+                if (parentId.length <= 18) {
+                    for (cr in graph.compositeRequests) {
+                        if ((cr.url.contains(getSoup(model)) && cr.body[referenceField] != null &&
                                     cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
-                            (cr.url.contains(referencedClassName) && cr.referenceId == parentId)){
+                            (cr.url.contains(referencedClassName) && cr.referenceId == parentId)
+                        ) {
                             graphPosition = graphId
                             success = true
                             break
@@ -147,14 +167,16 @@ class CompositeSync(
                     continue
                 }
 
-                for(cr in graph.compositeRequests){
-                    if(cr.url.contains(referencedClassName) &&
-                        CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId){
+                for (cr in graph.compositeRequests) {
+                    if (cr.url.contains(referencedClassName) &&
+                        CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId
+                    ) {
                         success = true
                         break
                     }
                 }
-                if(success){
+
+                if (success) {
                     cgh.addChildCompositeRequest(
                         graphId,
                         CompositeRequestHelper.transformToReferenceId(parentId),
@@ -167,7 +189,7 @@ class CompositeSync(
                 }
             }
 
-            if(parentId.length <= 18) {
+            if (parentId.length <= 18) {
                 if (!success)
                     cgh.addGraph(graphPosition + 1)
 
@@ -358,7 +380,6 @@ class CompositeSync(
     }
 
     private fun prepareJsonArray(model: Class<out SmartObject>): JSONArray {
-
         val name = getSoup(model)
 
         if(name.isEmpty())
@@ -380,5 +401,4 @@ class CompositeSync(
             JSONArray()
         }
     }
-
 }
