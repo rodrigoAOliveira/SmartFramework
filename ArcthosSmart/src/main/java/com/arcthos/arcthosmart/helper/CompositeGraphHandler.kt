@@ -12,7 +12,7 @@ class CompositeGraphHandler {
 
     private val gson = Gson()
     private val graphs = ArrayList<GraphRequest>()
-    val parentsWithReference = ArrayList<JsonObject>()
+    val requestWithReference = ArrayList<JsonObject>()
 
     fun addGraph(graphId : Int){
         val g = GraphRequest(graphId, arrayListOf())
@@ -50,7 +50,7 @@ class CompositeGraphHandler {
                     referenceField,
                     "@{" + jsonObject[referenceField].toString() + ".id}"
                 )
-                parentsWithReference.add(jsonObject)
+                requestWithReference.add(jsonObject)
                 return true
             }
         }

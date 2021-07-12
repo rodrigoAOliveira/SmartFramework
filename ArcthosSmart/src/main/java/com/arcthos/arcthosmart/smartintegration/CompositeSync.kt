@@ -105,7 +105,7 @@ class CompositeSync(
             }
         }
 
-        if (cgh.parentsWithReference.isNotEmpty()) {
+        if (cgh.requestWithReference.isNotEmpty()) {
             addChildCompositeRequest(
                 a,
                 referenceField,
@@ -114,7 +114,7 @@ class CompositeSync(
                 calculatedFields,
                 referencedClassName
             )
-            cgh.parentsWithReference.clear()
+            cgh.requestWithReference.clear()
         }
     }
 
