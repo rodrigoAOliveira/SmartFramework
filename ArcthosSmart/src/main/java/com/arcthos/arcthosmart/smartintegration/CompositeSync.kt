@@ -47,7 +47,6 @@ class CompositeSync(
     var lastRequest = false
 
     fun doCompositeUpload(allModels: List<Class<out SmartObject>>) {
-
         val cgh = CompositeGraphHandler()
 
         val firstSoap = allModels[0]
@@ -79,11 +78,10 @@ class CompositeSync(
     }
 
     private fun addCompositeGraphs(model: Class<out SmartObject>, cgh: CompositeGraphHandler) {
-        val referenceField = CompositeRequestHelper.getReferenceField(model)
+        val referenceFields = CompositeRequestHelper.getReferenceFields(model)
 
         val a = prepareJsonArray(model)
         val calculatedFields = CompositeRequestHelper.getCalculatedFields(model)
-        val referencedClassName = CompositeRequestHelper.getReferencedClass(model)
 
         var graphPosition =
             if (cgh.jsonGraphs().isEmpty()) {
@@ -99,7 +97,8 @@ class CompositeSync(
                     graphPosition,
                     o.toString(),
                     model,
-                    calculatedFields
+                    calculatedFields,
+                    referenceFields
                 )){
                 graphPosition++
             }
@@ -108,11 +107,10 @@ class CompositeSync(
         if (cgh.requestWithReference.isNotEmpty()) {
             addChildCompositeRequest(
                 a,
-                referenceField,
+                referenceFields,
                 cgh,
                 model,
-                calculatedFields,
-                referencedClassName
+                calculatedFields
             )
             cgh.requestWithReference.clear()
         }
@@ -120,87 +118,90 @@ class CompositeSync(
 
     private fun addChildCompositeRequest(
         a: JSONArray,
-        referenceField: String,
+        referenceFields: ArrayList<String>,
         cgh: CompositeGraphHandler,
         model: Class<out SmartObject>,
-        calculatedFields: List<String>,
-        referencedClassName: String
+        calculatedFields: List<String>
     ) {
-        for (i in 0 until a.length()) {
-            val o = a.getJSONArray(i)[0] as JSONObject
+        referenceFields.forEach { referenceField ->
+            val referencedClassName = CompositeRequestHelper.getReferencedClass(model, referenceField)
 
-            val parentId =
-                if (referenceField.isEmpty() || referenceField == "null")
-                    ""
-                else
-                    o.getString(referenceField)
-            var graphPosition = cgh.jsonGraphs().size
-            var success = false
+            for (i in 0 until a.length()) {
+                val o = a.getJSONArray(i)[0] as JSONObject
 
-            if (cgh.jsonGraphs().isEmpty()) {
-                cgh.addGraph(1)
-                cgh.addChildCompositeRequestSynchedParent(
-                    0,
-                    parentId,
-                    o.toString(),
-                    model,
-                    referenceField,
-                    calculatedFields
-                )
-                continue
-            }
+                val parentId =
+                    if (referenceField.isEmpty() || referenceField == "null")
+                        ""
+                    else
+                        o.getString(referenceField)
+                var graphPosition = cgh.jsonGraphs().size
+                var success = false
 
-            for (graphId in cgh.jsonGraphs().indices) {
-                val graph = cgh.jsonGraphs()[graphId]
-
-                if (parentId.length <= 18) {
-                    for (cr in graph.compositeRequests) {
-                        if ((cr.url.contains(getSoup(model)) && cr.body[referenceField] != null &&
-                                    cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
-                            (cr.url.contains(referencedClassName) && cr.referenceId == parentId)
-                        ) {
-                            graphPosition = graphId
-                            success = true
-                            break
-                        }
-                    }
+                if (cgh.jsonGraphs().isEmpty()) {
+                    cgh.addGraph(1)
+                    cgh.addChildCompositeRequestSynchedParent(
+                        0,
+                        o.toString(),
+                        model,
+                        referenceField,
+                        referenceFields,
+                        calculatedFields
+                    )
                     continue
                 }
 
-                for (cr in graph.compositeRequests) {
-                    if (cr.url.contains(referencedClassName) &&
-                        CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId
-                    ) {
-                        success = true
+                for (graphId in cgh.jsonGraphs().indices) {
+                    val graph = cgh.jsonGraphs()[graphId]
+
+                    if (parentId.length <= 18) {
+                        for (cr in graph.compositeRequests) {
+                            if ((cr.url.contains(getSoup(model)) && cr.body[referenceField] != null &&
+                                        cr.body[referenceField].toString() == "\"" + parentId + "\"") ||
+                                (cr.url.contains(referencedClassName) && cr.referenceId == parentId)
+                            ) {
+                                graphPosition = graphId
+                                success = true
+                                break
+                            }
+                        }
+                    } else {
+                        for (cr in graph.compositeRequests) {
+                            if (cr.url.contains(referencedClassName) &&
+                                CompositeRequestHelper.transformReferenceId(cr.referenceId) == parentId
+                            ) {
+                                success = true
+                                break
+                            }
+                        }
+                    }
+
+                    if (success) {
+                        cgh.addChildCompositeRequest(
+                            graphId,
+                            CompositeRequestHelper.transformToReferenceId(parentId),
+                            o.toString(),
+                            model,
+                            referenceField,
+                            referenceFields,
+                            calculatedFields
+                        )
                         break
                     }
                 }
 
-                if (success) {
-                    cgh.addChildCompositeRequest(
-                        graphId,
-                        CompositeRequestHelper.transformToReferenceId(parentId),
+                if (parentId.length <= 18) {
+                    if (!success)
+                        cgh.addGraph(graphPosition + 1)
+
+                    cgh.addChildCompositeRequestSynchedParent(
+                        graphPosition,
                         o.toString(),
                         model,
                         referenceField,
+                        referenceFields,
                         calculatedFields
                     )
-                    break
                 }
-            }
-
-            if (parentId.length <= 18) {
-                if (!success)
-                    cgh.addGraph(graphPosition + 1)
-
-                cgh.addChildCompositeRequestSynchedParent(
-                    graphPosition,
-                    parentId,
-                    o.toString(),
-                    model,
-                    referenceField,
-                    calculatedFields
-                )
             }
         }
     }

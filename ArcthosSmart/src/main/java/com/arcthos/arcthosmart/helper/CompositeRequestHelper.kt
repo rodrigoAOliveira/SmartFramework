@@ -23,29 +23,32 @@ object CompositeRequestHelper {
         return calculatedFields
     }
 
-    fun getReferenceField(type: Class<out SmartObject>) : String{
+    fun getReferenceFields(type: Class<out SmartObject>) : ArrayList<String> {
         val fields = type.declaredFields
-        var referencedField = ""
+        val referencedFields = arrayListOf<String>()
 
         for (field in fields) {
             for ( i in field.annotations.indices) {
                 val annotation = field.annotations[i]
                 if (annotation is ReferenceField) {
-                    referencedField = getJsonPropertyName(field)
+                    referencedFields.add(getJsonPropertyName(field))
                     break
                 }
             }
         }
 
-        return referencedField
+        return referencedFields
     }
 
-    fun getReferencedClass(type: Class<out SmartObject>) : String{
+    fun getReferencedClass(type: Class<out SmartObject>, referenceField: String) : String{
         val fields = type.declaredFields
         var referencedClass = ""
 
         for (field in fields) {
             for ( i in field.annotations.indices) {
+                if (!field.name.contains(referenceField))
+                    continue
+
                 val annotation = field.annotations[i]
                 if (annotation is ReferenceField) {
                     referencedClass = annotation.referencedClass
