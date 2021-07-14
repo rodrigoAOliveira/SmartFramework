@@ -129,6 +129,12 @@ class CompositeGraphHandler {
         id: String,
         className: String
     ) {
+        val ignoreOnUpdateFields = if (method == CompositeRequestConstants.METHOD_PATCH){
+            CompositeRequestHelper.getIgnoreOnUpdateFields(smartObject)
+        } else {
+            listOf()
+        }
+
         for (field in smartObject.declaredFields) {
             val name = CompositeRequestHelper.getJsonPropertyName(field)
             if (calculatedFields.contains(name))

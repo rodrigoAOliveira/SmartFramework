@@ -4,6 +4,7 @@ import com.arcthos.arcthosmart.smartorm.SmartObject
 import com.fasterxml.jackson.annotation.JsonProperty
 import com.google.gson.JsonObject
 import com.arcthos.arcthosmart.annotations.CalculatedField
+import com.arcthos.arcthosmart.annotations.IgnoreOnUpdate
 import com.arcthos.arcthosmart.annotations.ReferenceField
 import com.arcthos.arcthosmart.model.compositeRequest.CompositeRequestConstants
 import com.arcthos.arcthosmart.model.graphRequest.GraphRequest
@@ -38,6 +39,18 @@ object CompositeRequestHelper {
         }
 
         return referencedFields
+    }
+
+    fun getIgnoreOnUpdateFields(type: Class<out SmartObject>): List<String> {
+        val fields = type.declaredFields
+        val ignoreOnUpdateFields = arrayListOf<String>()
+
+        for (field in fields) {
+            if (field.isAnnotationPresent(IgnoreOnUpdate::class.java)) {
+                ignoreOnUpdateFields.add(getJsonPropertyName(field))
+            }
+        }
+        return ignoreOnUpdateFields
     }
 
     fun getReferencedClass(type: Class<out SmartObject>, referenceField: String) : String{
