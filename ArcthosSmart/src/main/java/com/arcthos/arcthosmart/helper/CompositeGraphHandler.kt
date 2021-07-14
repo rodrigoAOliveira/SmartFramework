@@ -137,7 +137,7 @@ class CompositeGraphHandler {
 
         for (field in smartObject.declaredFields) {
             val name = CompositeRequestHelper.getJsonPropertyName(field)
-            if (calculatedFields.contains(name))
+            if (calculatedFields.contains(name) || ignoreOnUpdateFields.contains(name))
                 jsonObject.remove(name)
         }
 
